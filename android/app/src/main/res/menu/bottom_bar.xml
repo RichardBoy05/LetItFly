@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/routine_tab"
+        android:title="@string/routine_bottom_tab"
+        android:icon="@drawable/ic_routine"
+        />
+
+    <item
+        android:id="@+id/play_tab"
+        android:title="@string/play_bottom_tab"
+        android:icon="@drawable/ic_play"
+        />
+
+    <item
+        android:id="@+id/stats_tab"
+        android:title="@string/stats_bottom_tab"
+        android:icon="@drawable/ic_stats"
+        />
+
+
+</menu>

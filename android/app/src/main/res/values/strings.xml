@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">Let It Fly</string>
+
+    <string name="routine_bottom_tab">Routine</string>
+    <string name="play_bottom_tab">Play</string>
+    <string name="stats_bottom_tab">Stats</string>
+
 </resources>
