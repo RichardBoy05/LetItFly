@@ -1,5 +1,9 @@
 package com.richardmeoli.letitfly.logic;
 
+import android.database.sqlite.SQLiteDatabase;
+
+import com.richardmeoli.letitfly.ui.main.MainActivity;
+
 public class Position {
 
     // abstraction of the concept of Position
@@ -20,6 +24,7 @@ public class Position {
         this.pointsPerShot = pointsPerShot;
         this.pointsPerLastShot = pointsPerLastShot;
         this.notes = notes;
+
     }
 
     public String getRoutineName() {

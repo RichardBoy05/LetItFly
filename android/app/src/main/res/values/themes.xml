@@ -1,6 +1,6 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme (dark mode not supported). -->
-    <style name="Theme.LetItFly" parent="Theme.MaterialComponents.Light.NoActionBar">
+    <style name="Theme.LetItFly" parent="Theme.AppCompat.Light.NoActionBar">
         <!-- Primary brand color. -->
         <item name="colorPrimary">@color/white</item>
         <item name="colorPrimaryVariant">@color/white</item>

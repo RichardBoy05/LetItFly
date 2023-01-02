@@ -1,25 +1,33 @@
-package com.richardmeoli.letitfly.main;
+package com.richardmeoli.letitfly.ui.main;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import android.annotation.SuppressLint;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.richardmeoli.letitfly.R;
+import com.richardmeoli.letitfly.logic.DatabaseHelper;
 
 public class MainActivity extends AppCompatActivity {
 
-    @SuppressLint("NonConstantResourceId")
+    private BottomNavigationView bottomBar;
+    private SQLiteDatabase dbHelper;
 
+    @SuppressLint("NonConstantResourceId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        showFragment(new com.richardmeoli.letitfly.main.PlayFragment());
+        showFragment(new PlayFragment());
+
+        // database initialization
+
+        dbHelper = DatabaseHelper.getInstance(MainActivity.this).getWritableDatabase();
 
         // views initialization
 
-        BottomNavigationView bottomBar = findViewById(R.id.bottom_bar);
+        bottomBar = findViewById(R.id.bottom_bar);
 
         // basic configuration
 
@@ -31,15 +39,15 @@ public class MainActivity extends AppCompatActivity {
 
             switch (item.getItemId()){
                 case R.id.routine_tab:
-                    showFragment(new com.richardmeoli.letitfly.main.RoutineFragment());
+                    showFragment(new RoutineFragment());
                     break;
 
                 case R.id.play_tab:
-                    showFragment(new com.richardmeoli.letitfly.main.PlayFragment());
+                    showFragment(new PlayFragment());
                     break;
 
                 case R.id.stats_tab:
-                    showFragment(new com.richardmeoli.letitfly.main.StatsFragment());
+                    showFragment(new StatsFragment());
                     break;
 
                 default:
@@ -51,7 +59,14 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    @Override
+    protected void onDestroy() {
+        dbHelper.close();
+        super.onDestroy();
+    }
+
     private void showFragment(Fragment fragment){
         getSupportFragmentManager().beginTransaction().replace(R.id.frame_layout, fragment).commit();
     }
+
 }

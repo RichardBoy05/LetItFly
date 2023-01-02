@@ -1,4 +1,4 @@
-package com.richardmeoli.letitfly.main;
+package com.richardmeoli.letitfly.ui.main;
 
 import android.os.Bundle;
 
