@@ -12,7 +12,8 @@ import com.richardmeoli.letitfly.logic.DatabaseHelper;
 public class MainActivity extends AppCompatActivity {
 
     private BottomNavigationView bottomBar;
-    private SQLiteDatabase dbHelper;
+    private static SQLiteDatabase dbHelper;
+
 
     @SuppressLint("NonConstantResourceId")
     @Override
@@ -67,6 +68,10 @@ public class MainActivity extends AppCompatActivity {
 
     private void showFragment(Fragment fragment){
         getSupportFragmentManager().beginTransaction().replace(R.id.frame_layout, fragment).commit();
+    }
+
+    public static SQLiteDatabase getDbHelper() {
+        return dbHelper;
     }
 
 }
