@@ -2,102 +2,25 @@ package com.richardmeoli.letitfly.logic;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
 import androidx.annotation.Nullable;
 import com.richardmeoli.letitfly.ui.main.MainActivity;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
-public class DatabaseHelper extends SQLiteOpenHelper {
+public class DatabaseHelper extends SQLiteOpenHelper implements DatabaseContract{
     /*
-     * - Helper class that handles all the databases values and methods
-     *
-     * - A lot of static fields/methods because we share a unique instance
-     * of the database through the whole application (so it's class related not object related)
-     *
-     * - Singleton Pattern implementation to prevent this class from being instatiated more than once
+
+     * - Helper class that handles all the databases methods
+     * - Singleton Pattern implementation to prevent the class from being instatiated more than once
      *
      */
 
-    // static class instance
-
     private static DatabaseHelper instance;
 
-    // database general values
-
-    public static final String DATABASE_NAME = "letitfly.db";
-    public static final int DATABASE_VERSION = 1;
-    public static final String TABLE_ROUTINES = "routines";
-    public static final String TABLE_STATS = "stats";
-    public static final String R_S_P_COLUMN_ID = "id";
-
-    // minimum and maximum lengths
-
-    public static final int ROUTINE_NAME_MIN_LENGTH = 3;
-    public static final int ROUTINE_NAME_MAX_LENGTH = 25;
-    public static final int USERNAME_MIN_LENGTH = 3;
-    public static final int USERNAME_MAX_LENGTH = 15;
-    public static final int R_NOTES_MAX_LENGTH = 100;
-    public static final int P_NOTES_MAX_LENGTH = 15;
-    public static final int S_OUTCOME_MAX_LENGTH = 5000;
-    public static final int SMALLINT_MAX_VALUE = 32767;
-
-    // routine table values
-
-    public static final String R_COLUMN_NAME = "name";
-    public static final String R_COLUMN_AUTHOR = "author";
-    public static final String R_COLUMN_COLOR = "color";
-    public static final String R_COLUMN_UUID = "uuid";
-    public static final String R_COLUMN_TIME = "time";
-    public static final String R_COLUMN_IS_PUBLIC = "is_public";
-    public static final String R_COLUMN_NOTES = "notes";
-    public static final String[] R_COLUMNS = {R_COLUMN_NAME, R_COLUMN_AUTHOR, R_COLUMN_COLOR,
-            R_COLUMN_UUID, R_COLUMN_TIME, R_COLUMN_IS_PUBLIC, R_COLUMN_NOTES}; // id excluded
-
-    private static final String R_CREATION_STATEMENT = "CREATE TABLE '" + TABLE_ROUTINES + "' (\n" +
-            "\t'" + R_S_P_COLUMN_ID + "' INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,\n" +
-            "\t'" + R_COLUMN_NAME + "' VARCHAR(" + ROUTINE_NAME_MAX_LENGTH + ") UNIQUE NOT NULL,\n" +
-            "\t'" + R_COLUMN_AUTHOR + "' VARCHAR(" + USERNAME_MAX_LENGTH + ") NOT NULL,\n" +
-            "\t'" + R_COLUMN_COLOR + "' CHAR(7) NOT NULL,\n" +
-            "\t'" + R_COLUMN_UUID + "' VARCHAR(36) UNIQUE NOT NULL,\n" +
-            "\t'" + R_COLUMN_TIME + "' SMALLINT,\n" +
-            "\t'" + R_COLUMN_IS_PUBLIC + "' BOOLEAN NOT NULL,\n" +
-            "\t'" + R_COLUMN_NOTES + "' VARCHAR(" + R_NOTES_MAX_LENGTH + ")" +
-            ");";
-
-    // stats table values
-
-    public static final String S_COLUMN_DATE = "date";
-    public static final String S_COLUMN_ROUTINE = "routine";
-    public static final String S_COLUMN_REPS = "reps";
-    public static final String S_COLUMN_OUTCOME = "outcome";
-    public static final String[] S_COLUMNS = {S_COLUMN_DATE, S_COLUMN_ROUTINE,
-            S_COLUMN_REPS, S_COLUMN_OUTCOME}; // id excluded
-
-    private static final String S_CREATION_STATEMENT = "CREATE TABLE '" + TABLE_STATS +  "'(\n" +
-            "\t'" + R_S_P_COLUMN_ID + "' INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,\n" +
-            "\t'" + S_COLUMN_DATE + "' DATETIME UNIQUE NOT NULL,\n" +
-            "\t'" + S_COLUMN_ROUTINE + "' VARCHAR(" + ROUTINE_NAME_MAX_LENGTH + ") NOT NULL,\n" +
-            "\t'" + S_COLUMN_REPS + "' TINYINT NOT NULL,\n" +
-            "\t'" + S_COLUMN_OUTCOME + "' VARCHAR(" + S_OUTCOME_MAX_LENGTH + ") NOT NULL" +
-            ");";
-
-    // position [nameRoutine] table values -> the name is not constant,
-    // but depends on the routine associated to that table
-
-    public static final String P_COLUMN_X_POS = "x_pos";
-    public static final String P_COLUMN_Y_POS = "y_pos";
-    public static final String P_COLUMN_SHOTS = "shots";
-    public static final String P_COLUMN_PTS_PER_SHOT = "pts_per_shot";
-    public static final String P_COLUMN_PTS_PER_LAST_SHOT = "pts_per_last_shot";
-    public static final String P_COLUMN_NOTES = "notes";
-    public static final String[] P_COLUMNS = {P_COLUMN_X_POS, P_COLUMN_Y_POS, P_COLUMN_SHOTS,
-            P_COLUMN_PTS_PER_SHOT, P_COLUMN_PTS_PER_LAST_SHOT, P_COLUMN_NOTES}; // id excluded
-
-    // cannot create a universal creation statement for this table because
-    // its name is variable, so use the method "getPositionTableCreationStatement" (below)
 
     private DatabaseHelper(@Nullable Context context) {  // private so it's only accessible within the class
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -147,20 +70,20 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     public static boolean insertRecord(String table, ArrayList<Object> values){
-        // code to insert a new record (row) into a specific table of the database
+        // inserts a new record (row) into a specific 'table' of the database
 
         String[] columns;
 
         switch (table){ // check if the sizes match the columns
 
-            case TABLE_ROUTINES:
+            case ROUTINES_TABLE:
                 if (values.size() != R_COLUMNS.length) {
                     return false;
                 }
                 columns = R_COLUMNS;
                 break;
 
-            case TABLE_STATS:
+            case STATS_TABLE:
                 if (values.size() != S_COLUMNS.length) {
                     return false;
                 }
@@ -177,104 +100,128 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         ContentValues record = buildContentValues(columns, values);
 
-        return MainActivity.getDbHelper().insert(table, null, record) != -1;
+        try {
+
+            return MainActivity.getDbHelper().insert(table, null, record) != -1;
+
+        } catch (SQLiteException e){
+            e.printStackTrace();
+            return false;
+        }
     }
 
-//    public static boolean deleteRecordById(String table, int id){
-//        // delete a record (row) where column id matches the given parameter "id"
-//
-//        return MainActivity.getDbHelper().delete(table, R_S_P_COLUMN_ID + " LIKE ?", new String[]{Integer.toString(id)}) != 0;
-//
-//    }
+    public static boolean deleteRecords(String table, String whereColumn, Object value){
+        // deletes the records (row) of a 'table' where column specified as 'whereColumn'
+        // (pass null to delete all rows)
+        // matches the given parameter 'value'
 
-    public static boolean deleteRecord(String table, String parameter, Object value){
-        // delete a record (row) where column id matches the given parameter "id"
+        String whereClause = whereColumn == null ? null : whereColumn + " LIKE ?";
+        String[] valuesClause = value == null ? null : new String[]{value.toString()};
 
-        return MainActivity.getDbHelper().delete(table, parameter + " LIKE ?", new String[]{value.toString()}) != 0;
+        try {
 
-    }
+            return MainActivity.getDbHelper().delete(table, whereClause, valuesClause) != 0;
 
-//    public static boolean deleteRoutinesRecordByName(String name){
-//        // delete a record (row) where column name matches the given parameter "name"
-//
-//        return MainActivity.getDbHelper().delete(TABLE_ROUTINES, R_COLUMN_NAME + " LIKE ?", new String[]{name}) != 0;
-//
-//    }
-//
-//    public static boolean deleteRoutinesRecordByUuid(String uuid){
-//        // delete a record (row) where column uuid matches the given parameter "uuid"
-//
-//        return MainActivity.getDbHelper().delete(TABLE_ROUTINES, R_COLUMN_UUID + " LIKE ?", new String[]{uuid}) != 0;
-//
-//    }
-//
-//    public static boolean deleteStatsRecordByDate(String date){
-//        // delete a record (row) where column date matches the given parameter "date"
-//
-//        return MainActivity.getDbHelper().delete(TABLE_STATS, S_COLUMN_DATE + " LIKE ?", new String[]{date}) != 0;
-//
-//    }
-//
-//    public static boolean updateRecordById(String table, String[] columns, ArrayList<Object> newValues, int id){
-//        // update a record (row) where column id matches the given parameter "id"
-//
-//        if (columns.length != newValues.size() || Arrays.asList(columns).contains(R_S_P_COLUMN_ID)){
-//            return false;
-//        }
-//
-//        return MainActivity.getDbHelper().update(table, buildContentValues(columns, newValues),
-//                R_S_P_COLUMN_ID + " LIKE ?", new String[]{Integer.toString(id)}) != 0;
-//
-//    }
-
-    public static boolean updateRecord(String table, String[] columns, ArrayList<Object> newValues, String parameter, Object value){
-        // update a record (row) where column id matches the given parameter "id"
-
-        if (columns.length != newValues.size() || Arrays.asList(columns).contains(R_S_P_COLUMN_ID)){
+        } catch (SQLiteException e){
+            e.printStackTrace();
             return false;
         }
 
-        return MainActivity.getDbHelper().update(table, buildContentValues(columns, newValues),
-                parameter + " LIKE ?", new String[]{value.toString()}) != 0;
+    }
+
+    public static boolean updateRecords(String table,
+                                        String whereColumn,
+                                        Object value, String[] columnsToUpdate,
+                                        ArrayList<Object> newValues){
+        // updates the records (row) where the column 'whereColumn'
+        // matches the given parameter 'value',
+        // (pass null to update all rows)
+        // replacing the old values with the 'newValues'
+        // for the matching 'columnsToUpdate'
+
+        if (columnsToUpdate.length != newValues.size() ||
+                Arrays.asList(columnsToUpdate).contains(R_S_P_COLUMN_ID)){
+            return false;
+        }
+
+        String whereClause = whereColumn == null ? null : whereColumn + " LIKE ?";
+        String[] valuesClause = value == null ? null : new String[]{value.toString()};
+
+        try {
+
+            return MainActivity.getDbHelper().update(table,
+                    buildContentValues(columnsToUpdate, newValues),
+                    whereClause, valuesClause) != 0;
+
+        } catch (SQLiteException e){
+            e.printStackTrace();
+            return false;
+        }
 
     }
 
-//    public static boolean updateRoutinesRecordByName(String name, String[] columns, ArrayList<Object> newValues){
-//        // update a record (row) where column name matches the given parameter "name"
-//
-//        if (columns.length != newValues.size() || Arrays.asList(columns).contains(R_S_P_COLUMN_ID)){
-//            return false;
-//        }
-//
-//        return MainActivity.getDbHelper().update(TABLE_ROUTINES, buildContentValues(columns, newValues),
-//                R_COLUMN_NAME + " LIKE ?", new String[]{name}) != 0;
-//
-//    }
-//
-//    public static boolean updateRoutinesRecordByUuid(String uuid, String[] columns, ArrayList<Object> newValues){
-//        // update a record (row) where column uuid matches the given parameter "uuid"
-//
-//        if (columns.length != newValues.size() || Arrays.asList(columns).contains(R_S_P_COLUMN_ID)){
-//            return false;
-//        }
-//
-//        return MainActivity.getDbHelper().update(TABLE_ROUTINES, buildContentValues(columns, newValues),
-//                R_COLUMN_UUID + " LIKE ?", new String[]{uuid}) != 0;
-//
-//    }
-//
-//    public static boolean updateStatsRecordByDate(String date, String[] columns, ArrayList<Object> newValues){
-//        // update a record (row) where column date matches the given parameter "date"
-//
-//        if (columns.length != newValues.size() || Arrays.asList(columns).contains(R_S_P_COLUMN_ID)){
-//            return false;
-//        }
-//
-//        return MainActivity.getDbHelper().update(TABLE_STATS, buildContentValues(columns, newValues),
-//                S_COLUMN_DATE + " LIKE ?", new String[]{date}) != 0;
-//
-//    }
+    public static ArrayList<ArrayList<String>> selectRecords(String table,
+                                                             String[] columns,
+                                                             String whereColumn,
+                                                             Object value){
 
+        // selects the values of the selected 'columns' (pass null to select from all columns)
+        // of the given 'table', where the column 'whereColumn' matches the given
+        // parameter 'value' (pass null to select all rows).
+        // Grouping, having and sorting caluses are not included
+        // for better readability and because they are not useful in this application)
+
+        String whereClause = whereColumn == null ? null : whereColumn + " = ?";
+        String[] valuesClause = value == null ? null : new String[]{value.toString()};
+
+        try (Cursor cursor = MainActivity.getDbHelper().query(
+                table,
+                columns,
+                whereClause,
+                valuesClause,
+                null,
+                null,
+                null)) {
+
+            ArrayList<ArrayList<String>> result = new ArrayList<>();
+
+            if (columns == null){
+
+                switch (table){ // check if the sizes match the columns
+
+                    case ROUTINES_TABLE:
+                        columns = R_COLUMNS_ID_INCLUDED;
+                        break;
+
+                    case STATS_TABLE:
+                        columns = S_COLUMNS_ID_INCLUDED;
+                        break;
+
+                    default:
+                        columns = P_COLUMNS_ID_INCLUDED;
+                        break;
+                }
+            }
+
+            while (cursor.moveToNext()){
+
+                ArrayList<String> item = new ArrayList<>();
+                for (String i: columns){
+                    item.add(cursor.getString(cursor.getColumnIndexOrThrow(i)));
+                }
+
+                result.add(item);
+            }
+
+            return result;
+
+        } catch (SQLiteException | IllegalArgumentException e) {
+            e.printStackTrace();
+            return null;
+
+        }
+        
+    }
 
 
     public static String getPositionsTableCreationStatement(String routineName){

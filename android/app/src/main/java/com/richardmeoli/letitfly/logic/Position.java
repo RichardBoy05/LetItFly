@@ -1,10 +1,6 @@
 package com.richardmeoli.letitfly.logic;
 
-import android.database.sqlite.SQLiteDatabase;
-
-import com.richardmeoli.letitfly.ui.main.MainActivity;
-
-public class Position {
+public class Position implements DatabaseContract{
 
     // abstraction of the concept of Position
 
@@ -18,23 +14,23 @@ public class Position {
 
     public Position(String routineName, int xPos, int yPos, int shotsCount, int pointsPerShot, int pointsPerLastShot, String notes) {
 
-        if (routineName == null || routineName.length() < DatabaseHelper.ROUTINE_NAME_MIN_LENGTH || routineName.length() > DatabaseHelper.ROUTINE_NAME_MAX_LENGTH){
+        if (routineName == null || routineName.length() < ROUTINE_NAME_MIN_LENGTH || routineName.length() > ROUTINE_NAME_MAX_LENGTH){
             throw new IllegalArgumentException("Invalid Routine name");
         }
 
-        if (shotsCount < 1 || shotsCount > DatabaseHelper.SMALLINT_MAX_VALUE){
+        if (shotsCount < 1 || shotsCount > SMALLINT_MAX_VALUE){
             throw new IllegalArgumentException("Invalid Shots count");
         }
 
-        if (pointsPerShot < 1 || pointsPerShot > DatabaseHelper.SMALLINT_MAX_VALUE){
+        if (pointsPerShot < 1 || pointsPerShot > SMALLINT_MAX_VALUE){
             throw new IllegalArgumentException("Invalid Points per shot value");
         }
 
-        if (pointsPerLastShot < 1 || pointsPerLastShot > DatabaseHelper.SMALLINT_MAX_VALUE){
+        if (pointsPerLastShot < 1 || pointsPerLastShot > SMALLINT_MAX_VALUE){
             throw new IllegalArgumentException("Invalid Points per last shot value");
         }
 
-        if (notes == null || notes.length() > DatabaseHelper.P_NOTES_MAX_LENGTH || notes.indexOf('§') != -1){
+        if (notes == null || notes.length() > P_NOTES_MAX_LENGTH || notes.indexOf('§') != -1){
             throw new IllegalArgumentException("Invalid notes");
         }
 

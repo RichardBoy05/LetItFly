@@ -2,7 +2,7 @@ package com.richardmeoli.letitfly.logic;
 
 import java.util.ArrayList;
 
-public class Routine {
+public class Routine implements DatabaseContract {
 
     // abstraction of the concept of Routine
 
@@ -17,11 +17,11 @@ public class Routine {
 
     public Routine(String name, String author, String color, String uuid, int time, boolean isPublic, String notes, ArrayList<Position> positions) {
 
-        if (name == null || name.length() < DatabaseHelper.ROUTINE_NAME_MIN_LENGTH || name.length() > DatabaseHelper.ROUTINE_NAME_MAX_LENGTH){
+        if (name == null || name.length() < ROUTINE_NAME_MIN_LENGTH || name.length() > ROUTINE_NAME_MAX_LENGTH){
             throw new IllegalArgumentException("Invalid name");
         }
 
-        if (author == null || author.length() < DatabaseHelper.USERNAME_MIN_LENGTH || author.length() > DatabaseHelper.USERNAME_MAX_LENGTH){
+        if (author == null || author.length() < USERNAME_MIN_LENGTH || author.length() > USERNAME_MAX_LENGTH){
             throw new IllegalArgumentException("Invalid username");
         }
 
@@ -33,11 +33,11 @@ public class Routine {
             throw new IllegalArgumentException("Invalid UUID string");
         }
 
-        if (time < 0 || time > DatabaseHelper.SMALLINT_MAX_VALUE){
+        if (time < 0 || time > SMALLINT_MAX_VALUE){
             throw new IllegalArgumentException("Invalid time");
         }
 
-        if (notes == null || notes.length() > DatabaseHelper.R_NOTES_MAX_LENGTH || notes.indexOf('§') != -1){
+        if (notes == null || notes.length() > R_NOTES_MAX_LENGTH || notes.indexOf('§') != -1){
             throw new IllegalArgumentException("Invalid notes");
         }
 

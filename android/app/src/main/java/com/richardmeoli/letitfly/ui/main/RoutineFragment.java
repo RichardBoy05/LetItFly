@@ -12,12 +12,12 @@ import android.widget.Button;
 import android.widget.Toast;
 
 import com.richardmeoli.letitfly.R;
+import com.richardmeoli.letitfly.logic.DatabaseContract;
 import com.richardmeoli.letitfly.logic.DatabaseHelper;
 
-import java.util.ArrayList;
 import java.util.UUID;
 
-public class RoutineFragment extends Fragment {
+public class RoutineFragment extends Fragment implements DatabaseContract {
 
     private Button add;
     private Button delete;
@@ -41,7 +41,7 @@ public class RoutineFragment extends Fragment {
 
         delete.setOnClickListener(v -> {
             Toast.makeText(getActivity(), "deleted db", Toast.LENGTH_SHORT).show();
-            requireContext().deleteDatabase(DatabaseHelper.DATABASE_NAME);
+            requireContext().deleteDatabase(DATABASE_NAME);
 
         });
 
@@ -64,28 +64,32 @@ public class RoutineFragment extends Fragment {
 //                Toast.makeText(getActivity(), e.getMessage(), Toast.LENGTH_SHORT).show();
 //            }
 
-            ArrayList<Object> values = new ArrayList<>();
-            values.add("2005-05-07 20:03:00");
-            values.add("sheeesu");
-            values.add(4200);
-            values.add(5);
-
-            String[] columns = new String[4];
-            columns[0] = DatabaseHelper.S_COLUMN_DATE;
-            columns[1] = DatabaseHelper.S_COLUMN_OUTCOME;
-            columns[2] = DatabaseHelper.S_COLUMN_REPS;
-            columns[3] = DatabaseHelper.R_S_P_COLUMN_ID;
+//            ArrayList<Object> values = new ArrayList<>();
+//            values.add("nuova savage date");
+//            values.add("01010101010101010x1010");
+//            values.add(69);
+//            values.add("ssasas");
+//
+//            String[] columns = new String[4];
+//            columns[0] = DatabaseHelper.S_COLUMN_DATE;
+//            columns[1] = DatabaseHelper.S_COLUMN_OUTCOME;
+//            columns[2] = DatabaseHelper.S_COLUMN_REPS;
+//            columns[3] = DatabaseHelper.S_COLUMN_ROUTINE;
 
 
 //            boolean result = DatabaseHelper.insertRecord(DatabaseHelper.TABLE_ROUTINES, values);
 //            Toast.makeText(getActivity(), "addition " + result, Toast.LENGTH_SHORT).show();
 
 
-//            boolean result2 = DatabaseHelper.deleteRoutinesRecordByUuid("74cd11ad-889e-4729-8f8b-5fa9685c53d1");
+//            boolean result2 = DatabaseHelper.deleteRecord(DatabaseHelper.TABLE_ROUTINES, DatabaseHelper.R_COLUMN_AUTHOR, "richard");
 //            Toast.makeText(getActivity(), "deletion " + result2, Toast.LENGTH_SHORT).show();
 
-            boolean result3 = DatabaseHelper.updateRecordById(DatabaseHelper.TABLE_STATS, columns, values, 3);
-            Toast.makeText(getActivity(), "update " + result3, Toast.LENGTH_SHORT).show();
+//            boolean result3 = DatabaseHelper.updateRecords("sasa", DatabaseHelper.R_S_P_COLUMN_ID, 41, columns, values);
+//            Toast.makeText(getActivity(), "update " + result3, Toast.LENGTH_SHORT).show();
+
+            System.out.println(DatabaseHelper.selectRecords(STATS_TABLE,
+                    null,
+                    null, null));
 
 
         });
