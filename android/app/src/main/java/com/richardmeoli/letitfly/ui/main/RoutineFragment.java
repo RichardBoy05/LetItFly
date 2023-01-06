@@ -1,23 +1,26 @@
 package com.richardmeoli.letitfly.ui.main;
 
 import android.os.Bundle;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.Toast;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
 
-import com.richardmeoli.letitfly.R;
-import com.richardmeoli.letitfly.logic.DatabaseContract;
-import com.richardmeoli.letitfly.logic.DatabaseHelper;
-
+import java.util.ArrayList;
 import java.util.UUID;
 
-public class RoutineFragment extends Fragment implements DatabaseContract {
+import com.richardmeoli.letitfly.R;
+import com.richardmeoli.letitfly.logic.Position;
+import com.richardmeoli.letitfly.logic.Routine;
+import com.richardmeoli.letitfly.logic.database.DatabaseAttributes;
+import com.richardmeoli.letitfly.logic.database.InvalidInputException;
+
+
+public class RoutineFragment extends Fragment implements DatabaseAttributes {
 
     private Button add;
     private Button delete;
@@ -41,56 +44,27 @@ public class RoutineFragment extends Fragment implements DatabaseContract {
 
         delete.setOnClickListener(v -> {
             Toast.makeText(getActivity(), "deleted db", Toast.LENGTH_SHORT).show();
-            requireContext().deleteDatabase(DATABASE_NAME);
+            requireActivity().deleteDatabase(DATABASE_NAME);
 
         });
 
         add.setOnClickListener(v -> {
 
-//            try {
-//
-//                Position a = new Position("Test", 85, 66, 15, 1, 2, "susaaaaaaa");
-//                Position b = new Position("Test", 420, 69, 15, 1, 2, "sds");
-//
-//                ArrayList<Position> pos = new ArrayList<Position>();
-//                pos.add(a);
-//                pos.add(b);
-//
-                String uuid = UUID.randomUUID().toString();
-//
-//                Routine r = new Routine("Test", "Rich", "#0000ff", uuid, 0, false, "sasa", pos);
-//                Toast.makeText(getActivity(), "adding routine", Toast.LENGTH_SHORT).show();
-//            } catch (IllegalArgumentException e){
-//                Toast.makeText(getActivity(), e.getMessage(), Toast.LENGTH_SHORT).show();
-//            }
+            ArrayList<Position> positions = new ArrayList<>();
+            positions.add(new Position(50, 68, 140, 270, 470, "Dle \" raom'i"));
+            positions.add(new Position(40, 70, 150, 280, 408, "l5e \" ram'ice"));
+            positions.add(new Position(90, 60, 110, 205, 450, "lle \" ram'ice"));
+            positions.add(new Position(40, 80, 160, 20, 40, "Dle \" rom'ie"));
 
-//            ArrayList<Object> values = new ArrayList<>();
-//            values.add("nuova savage date");
-//            values.add("01010101010101010x1010");
-//            values.add(69);
-//            values.add("ssasas");
-//
-//            String[] columns = new String[4];
-//            columns[0] = DatabaseHelper.S_COLUMN_DATE;
-//            columns[1] = DatabaseHelper.S_COLUMN_OUTCOME;
-//            columns[2] = DatabaseHelper.S_COLUMN_REPS;
-//            columns[3] = DatabaseHelper.S_COLUMN_ROUTINE;
+            Routine routine = null;
 
+            try {
+                routine = new Routine("dfd", "richard", "#778899", UUID.randomUUID().toString(), 10, false, "Interessas'notes\"", positions);
+            } catch (InvalidInputException e) {
+                e.printStackTrace();
+            }
 
-//            boolean result = DatabaseHelper.insertRecord(DatabaseHelper.TABLE_ROUTINES, values);
-//            Toast.makeText(getActivity(), "addition " + result, Toast.LENGTH_SHORT).show();
-
-
-//            boolean result2 = DatabaseHelper.deleteRecord(DatabaseHelper.TABLE_ROUTINES, DatabaseHelper.R_COLUMN_AUTHOR, "richard");
-//            Toast.makeText(getActivity(), "deletion " + result2, Toast.LENGTH_SHORT).show();
-
-//            boolean result3 = DatabaseHelper.updateRecords("sasa", DatabaseHelper.R_S_P_COLUMN_ID, 41, columns, values);
-//            Toast.makeText(getActivity(), "update " + result3, Toast.LENGTH_SHORT).show();
-
-            System.out.println(DatabaseHelper.selectRecords(STATS_TABLE,
-                    null,
-                    null, null));
-
+            Toast.makeText(requireContext(), String.valueOf(routine.save(requireContext())), Toast.LENGTH_SHORT).show();
 
         });
 

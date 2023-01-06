@@ -1,10 +1,16 @@
 package com.richardmeoli.letitfly.logic;
 
-public class Position implements DatabaseContract{
+import android.util.Base64;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import com.richardmeoli.letitfly.logic.database.PositionsTable;
+import com.richardmeoli.letitfly.logic.database.RoutinesTable;
+
+public class Position implements PositionsTable, RoutinesTable {
 
     // abstraction of the concept of Position
 
-    private final String routineName;
     private final int xPos;
     private final int yPos;
     private final int shotsCount;
@@ -12,21 +18,17 @@ public class Position implements DatabaseContract{
     private final int pointsPerLastShot;
     private final String notes;
 
-    public Position(String routineName, int xPos, int yPos, int shotsCount, int pointsPerShot, int pointsPerLastShot, String notes) {
+    public Position(int xPos, int yPos, int shotsCount, int pointsPerShot, int pointsPerLastShot, String notes) {
 
-        if (routineName == null || routineName.length() < ROUTINE_NAME_MIN_LENGTH || routineName.length() > ROUTINE_NAME_MAX_LENGTH){
-            throw new IllegalArgumentException("Invalid Routine name");
-        }
-
-        if (shotsCount < 1 || shotsCount > SMALLINT_MAX_VALUE){
+        if (shotsCount < 1 || shotsCount > R_TIME_MAX_VALUE){
             throw new IllegalArgumentException("Invalid Shots count");
         }
 
-        if (pointsPerShot < 1 || pointsPerShot > SMALLINT_MAX_VALUE){
+        if (pointsPerShot < 1 || pointsPerShot > R_TIME_MAX_VALUE){
             throw new IllegalArgumentException("Invalid Points per shot value");
         }
 
-        if (pointsPerLastShot < 1 || pointsPerLastShot > SMALLINT_MAX_VALUE){
+        if (pointsPerLastShot < 1 || pointsPerLastShot > R_TIME_MAX_VALUE){
             throw new IllegalArgumentException("Invalid Points per last shot value");
         }
 
@@ -34,7 +36,6 @@ public class Position implements DatabaseContract{
             throw new IllegalArgumentException("Invalid notes");
         }
 
-        this.routineName = routineName.replaceAll("[^a-zA-Z0-9]", "_");;
         this.xPos = xPos;
         this.yPos = yPos;
         this.shotsCount = shotsCount;
@@ -44,9 +45,6 @@ public class Position implements DatabaseContract{
 
     }
 
-    public String getRoutineName() {
-        return routineName;
-    }
 
     public int getXPos() {
         return xPos;
