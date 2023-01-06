@@ -30,12 +30,12 @@ public class Routine implements RoutinesTable { // abstraction of the concept of
 
     public Routine(String name, String author, String color, String uuid, int time, boolean isPublic, String notes, ArrayList<Position> positions) throws InvalidInputException {
 
-        if (name == null || name.length() < R_NAME_MIN_LENGTH || name.length() > R_NAME_MAX_LENGTH || name.contains("[^a-zA-Z0-9]")){
+        if (name == null || name.length() < R_NAME_MIN_LENGTH || name.length() > R_NAME_MAX_LENGTH || !name.matches(R_NAME_VALID_CHARACTERS)){
             throw new InvalidInputException("Invalid routine name!");
         }
 
-        if (author == null || author.length() < R_USERNAME_MIN_LENGTH || author.length() > R_USERNAME_MAX_LENGTH || name.contains("[^a-zA-Z0-9]")){
-            throw new InvalidInputException("Invalid username!");
+        if (author == null || author.length() < R_AUTHOR_MIN_LENGTH || author.length() > R_AUTHOR_MAX_LENGTH || !author.matches(R_AUTHOR_VALID_CHARACTERS)){
+            throw new InvalidInputException("Invalid author name!");
         }
 
         if (color == null || color.length() != 7){
@@ -50,12 +50,12 @@ public class Routine implements RoutinesTable { // abstraction of the concept of
             throw new InvalidInputException("Invalid time!");
         }
 
-        if (notes == null || notes.length() > R_NOTES_MAX_LENGTH || notes.indexOf('§') != -1){
-            throw new InvalidInputException("Invalid notes");
+        if (notes == null || notes.length() > R_NOTES_MAX_LENGTH){
+            throw new InvalidInputException("Invalid notes!");
         }
 
         if (positions == null || positions.size() < 1){
-            throw new InvalidInputException("Invalid positions");
+            throw new InvalidInputException("Invalid positions!");
         }
 
         this.name = name;
@@ -64,7 +64,7 @@ public class Routine implements RoutinesTable { // abstraction of the concept of
         this.uuid = uuid;
         this.time = time;
         this.isPublic = isPublic;
-        this.notes = notes.replaceAll("'", "§");
+        this.notes = notes;
         this.positions = positions;
     }
     
@@ -75,14 +75,17 @@ public class Routine implements RoutinesTable { // abstraction of the concept of
         Database db = Database.getInstance(context);
         ArrayList<Object> values = new ArrayList<>(Arrays.asList(name, author, color, uuid, time, isPublic, notes));
 
-        db.insertRecord(ROUTINES_TABLE, values);
+        if (!db.insertRecord(ROUTINES_TABLE, values)){return false;}
+
         String table = encodeTableName(name);
         db.addPositionsTable(table);
 
         for (Position pos: positions){
 
-            db.insertRecord(table, new ArrayList<>(Arrays.asList(pos.getXPos(), pos.getYPos(), pos.getShotsCount(),
-                    pos.getPointsPerShot(), pos.getPointsPerLastShot(), pos.getNotes())));
+            boolean result = db.insertRecord(table, new ArrayList<>(Arrays.asList(pos.getXPos(), pos.getYPos(),
+                    pos.getShotsCount(), pos.getPointsPerShot(), pos.getPointsPerLastShot(), pos.getNotes())));
+
+            if (!result) {return false;}
         }
 
         return true;
@@ -106,7 +109,6 @@ public class Routine implements RoutinesTable { // abstraction of the concept of
         return name;
     }
 
-
     public String getAuthor() {
         return author;
     }
@@ -115,21 +117,17 @@ public class Routine implements RoutinesTable { // abstraction of the concept of
         return color;
     }
 
-
     public String getUuid() {
         return uuid;
     }
-
 
     public int getTime() {
         return time;
     }
 
-
     public boolean isPublic() {
         return isPublic;
     }
-
 
     public String getNotes() {
         return notes;

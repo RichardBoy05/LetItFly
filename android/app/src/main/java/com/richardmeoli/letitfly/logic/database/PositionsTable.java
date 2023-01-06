@@ -18,6 +18,9 @@ public interface PositionsTable {
 
     // values
 
-    int P_NOTES_MAX_LENGTH = 15;
+    int P_SHOTS_COUNT_MAX_VALUE = 32000;
+    int P_POINTS_PER_SHOT_MAX_VALUE = 10;
+    int P_POINTS_PER_LAST_SHOT_MAX_VALUE = 20;
+    int P_NOTES_MAX_LENGTH = 20;
 
 }

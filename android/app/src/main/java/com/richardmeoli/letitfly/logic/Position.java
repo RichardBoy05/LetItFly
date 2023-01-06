@@ -1,15 +1,11 @@
 package com.richardmeoli.letitfly.logic;
 
-import android.util.Base64;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+import com.richardmeoli.letitfly.logic.database.InvalidInputException;
 import com.richardmeoli.letitfly.logic.database.PositionsTable;
-import com.richardmeoli.letitfly.logic.database.RoutinesTable;
 
-public class Position implements PositionsTable, RoutinesTable {
+public class Position implements PositionsTable { // abstraction of the concept of Position
 
-    // abstraction of the concept of Position
+    // fields
 
     private final int xPos;
     private final int yPos;
@@ -18,22 +14,24 @@ public class Position implements PositionsTable, RoutinesTable {
     private final int pointsPerLastShot;
     private final String notes;
 
-    public Position(int xPos, int yPos, int shotsCount, int pointsPerShot, int pointsPerLastShot, String notes) {
+    // constructor
 
-        if (shotsCount < 1 || shotsCount > R_TIME_MAX_VALUE){
-            throw new IllegalArgumentException("Invalid Shots count");
+    public Position(int xPos, int yPos, int shotsCount, int pointsPerShot, int pointsPerLastShot, String notes) throws InvalidInputException {
+
+        if (shotsCount < 1 || shotsCount > P_SHOTS_COUNT_MAX_VALUE){
+            throw new InvalidInputException("Invalid Shots count!");
         }
 
-        if (pointsPerShot < 1 || pointsPerShot > R_TIME_MAX_VALUE){
-            throw new IllegalArgumentException("Invalid Points per shot value");
+        if (pointsPerShot < 1 || pointsPerShot > P_POINTS_PER_SHOT_MAX_VALUE){
+            throw new InvalidInputException("Invalid Points per shot value!");
         }
 
-        if (pointsPerLastShot < 1 || pointsPerLastShot > R_TIME_MAX_VALUE){
-            throw new IllegalArgumentException("Invalid Points per last shot value");
+        if (pointsPerLastShot < 1 || pointsPerLastShot > P_POINTS_PER_LAST_SHOT_MAX_VALUE){
+            throw new InvalidInputException("Invalid Points per last shot value!");
         }
 
-        if (notes == null || notes.length() > P_NOTES_MAX_LENGTH || notes.indexOf('§') != -1){
-            throw new IllegalArgumentException("Invalid notes");
+        if (notes == null || notes.length() > P_NOTES_MAX_LENGTH){
+            throw new InvalidInputException("Invalid notes!");
         }
 
         this.xPos = xPos;
@@ -41,10 +39,11 @@ public class Position implements PositionsTable, RoutinesTable {
         this.shotsCount = shotsCount;
         this.pointsPerShot = pointsPerShot;
         this.pointsPerLastShot = pointsPerLastShot;
-        this.notes = notes.replaceAll("'", "§");
+        this.notes = notes;
 
     }
 
+    // getters
 
     public int getXPos() {
         return xPos;

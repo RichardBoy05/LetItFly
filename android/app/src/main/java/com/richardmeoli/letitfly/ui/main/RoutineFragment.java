@@ -6,6 +6,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -51,23 +52,28 @@ public class RoutineFragment extends Fragment implements DatabaseAttributes {
         add.setOnClickListener(v -> {
 
             ArrayList<Position> positions = new ArrayList<>();
-            positions.add(new Position(50, 68, 140, 270, 470, "Dle \" raom'i"));
-            positions.add(new Position(40, 70, 150, 280, 408, "l5e \" ram'ice"));
-            positions.add(new Position(90, 60, 110, 205, 450, "lle \" ram'ice"));
-            positions.add(new Position(40, 80, 160, 20, 40, "Dle \" rom'ie"));
-
-            Routine routine = null;
-
             try {
-                routine = new Routine("dfd", "richard", "#778899", UUID.randomUUID().toString(), 10, false, "Interessas'notes\"", positions);
+                positions.add(new Position(50, 68, 140, 270, 470, "Dle \" raom'i"));
+                positions.add(new Position(40, 70, 150, 280, 408, "l5e \" ram'ice"));
+                positions.add(new Position(90, 60, 110, 205, 450, "lle \" ram'ice"));
+                positions.add(new Position(40, 80, 160, 20, 40, "Dle \" rom'ie"));
             } catch (InvalidInputException e) {
                 e.printStackTrace();
             }
 
-            Toast.makeText(requireContext(), String.valueOf(routine.save(requireContext())), Toast.LENGTH_SHORT).show();
+            Routine routine;
+
+            try {
+                routine = new Routine("dsds", "richard", "#778899", UUID.randomUUID().toString(), 10, false, "Interessas'notes\"", positions);
+                Toast.makeText(requireContext(), String.valueOf(routine.save(requireContext())), Toast.LENGTH_SHORT).show();
+
+            } catch (InvalidInputException e) {
+                Toast.makeText(requireContext(), e.toString(), Toast.LENGTH_SHORT).show();
+                e.printStackTrace();
+            }
+
 
         });
-
 
 
     }

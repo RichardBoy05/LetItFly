@@ -26,7 +26,7 @@ public class Database extends SQLiteOpenHelper implements DatabaseContract {
     private static final String R_CREATION_STATEMENT = "CREATE TABLE IF NOT EXISTS '" + ROUTINES_TABLE + "' (\n" +
             "\t'" + R_S_P_COLUMN_ID + "' INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,\n" +
             "\t'" + R_COLUMN_NAME + "' VARCHAR(" + R_NAME_MAX_LENGTH + ") UNIQUE NOT NULL,\n" +
-            "\t'" + R_COLUMN_AUTHOR + "' VARCHAR(" + R_USERNAME_MAX_LENGTH + ") NOT NULL,\n" +
+            "\t'" + R_COLUMN_AUTHOR + "' VARCHAR(" + R_AUTHOR_MAX_LENGTH + ") NOT NULL,\n" +
             "\t'" + R_COLUMN_COLOR + "' CHAR(7) NOT NULL,\n" +
             "\t'" + R_COLUMN_UUID + "' VARCHAR(36) UNIQUE NOT NULL,\n" +
             "\t'" + R_COLUMN_TIME + "' SMALLINT,\n" +
