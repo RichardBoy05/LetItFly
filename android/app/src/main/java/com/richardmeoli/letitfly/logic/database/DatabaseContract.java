@@ -13,8 +13,10 @@ public interface DatabaseContract extends DatabaseAttributes, RoutinesTable, Sta
                           Object value, String[] columnsToUpdate,
                           ArrayList<Object> newValues);
 
-    ArrayList<ArrayList<String>> selectRecords(String table,
+    ArrayList<ArrayList<Object>> selectRecords(String table,
                                                String[] columns,
                                                String whereColumn,
-                                               Object value);
+                                               Object value,
+                                               String sortingColumn,
+                                               Boolean ascendent);
 }

@@ -1,6 +1,8 @@
 package com.richardmeoli.letitfly.ui.main;
 
 import android.os.Bundle;
+import android.provider.Settings;
+import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,6 +13,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.UUID;
 
@@ -51,30 +56,28 @@ public class RoutineFragment extends Fragment implements DatabaseAttributes {
 
         add.setOnClickListener(v -> {
 
+        try {
+
             ArrayList<Position> positions = new ArrayList<>();
-            try {
-                positions.add(new Position(50, 68, 140, 270, 470, "Dle \" raom'i"));
-                positions.add(new Position(40, 70, 150, 280, 408, "l5e \" ram'ice"));
-                positions.add(new Position(90, 60, 110, 205, 450, "lle \" ram'ice"));
-                positions.add(new Position(40, 80, 160, 20, 40, "Dle \" rom'ie"));
-            } catch (InvalidInputException e) {
-                e.printStackTrace();
-            }
+            positions.add(new Position(50, 68, 140, 10, 5, "Dle \" raom'i"));
+            positions.add(new Position(40, 70, 150, 7, 19, "sss"));
+            positions.add(new Position(90, 60, 120, 5, 18, "lle \" ram'ice"));
+            positions.add(new Position(40, 80, 160, 3, 1, "Dle \" rom'ie"));
+            Routine routine = new Routine("cicarsdofcofmfbo", "richard", "#778899", UUID.randomUUID(), 10, true, null, positions);
+            Toast.makeText(requireContext(), String.valueOf(routine.save(requireContext())), Toast.LENGTH_SHORT).show();
+            System.out.println(routine);
 
-            Routine routine;
+//            Routine routine = new Routine("dsds", requireContext());
+//            System.out.println(routine.toString());
 
-            try {
-                routine = new Routine("dsds", "richard", "#778899", UUID.randomUUID().toString(), 10, false, "Interessas'notes\"", positions);
-                Toast.makeText(requireContext(), String.valueOf(routine.save(requireContext())), Toast.LENGTH_SHORT).show();
-
-            } catch (InvalidInputException e) {
-                Toast.makeText(requireContext(), e.toString(), Toast.LENGTH_SHORT).show();
-                e.printStackTrace();
-            }
+        } catch (InvalidInputException e) {
+            Toast.makeText(requireContext(), e.toString(), Toast.LENGTH_SHORT).show();
+            e.printStackTrace();
+        }
 
 
-        });
+    });
 
 
-    }
+}
 }

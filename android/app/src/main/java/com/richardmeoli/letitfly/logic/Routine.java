@@ -1,13 +1,15 @@
 package com.richardmeoli.letitfly.logic;
 
-import android.util.Base64;
 import android.content.Context;
+
+import androidx.annotation.NonNull;
 
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 
 import com.richardmeoli.letitfly.logic.database.Database;
 import com.richardmeoli.letitfly.logic.database.RoutinesTable;
@@ -16,45 +18,46 @@ import com.richardmeoli.letitfly.logic.database.InvalidInputException;
 public class Routine implements RoutinesTable { // abstraction of the concept of Routine
 
     // fields
-    
+
     private final String name;
     private final String author;
     private final String color;
-    private final String uuid;
-    private final int time;
+    private final UUID uuid;
+    private final Integer time;
     private final boolean isPublic;
     private final String notes;
     private final ArrayList<Position> positions;
-    
-    // constructor
 
-    public Routine(String name, String author, String color, String uuid, int time, boolean isPublic, String notes, ArrayList<Position> positions) throws InvalidInputException {
+    // constructors
 
-        if (name == null || name.length() < R_NAME_MIN_LENGTH || name.length() > R_NAME_MAX_LENGTH || !name.matches(R_NAME_VALID_CHARACTERS)){
+    public Routine(String name, String author, String color, UUID uuid, Integer time, boolean isPublic, String notes, ArrayList<Position> positions) throws InvalidInputException {
+        // default constructor that builts a Routine object when all its parameters are given
+
+        if (name == null || name.length() < R_NAME_MIN_LENGTH || name.length() > R_NAME_MAX_LENGTH || !name.matches(R_NAME_VALID_CHARACTERS)) {
             throw new InvalidInputException("Invalid routine name!");
         }
 
-        if (author == null || author.length() < R_AUTHOR_MIN_LENGTH || author.length() > R_AUTHOR_MAX_LENGTH || !author.matches(R_AUTHOR_VALID_CHARACTERS)){
+        if (author == null || author.length() < R_AUTHOR_MIN_LENGTH || author.length() > R_AUTHOR_MAX_LENGTH || !author.matches(R_AUTHOR_VALID_CHARACTERS)) {
             throw new InvalidInputException("Invalid author name!");
         }
 
-        if (color == null || color.length() != 7){
+        if (color == null || color.length() != 7) {
             throw new InvalidInputException("Invalid color!");
         }
 
-        if (uuid == null || uuid.length() != 36){
+        if (uuid == null || uuid.toString().length() != 36) {
             throw new InvalidInputException("Invalid UUID string!");
         }
 
-        if (time < 0 || time > R_TIME_MAX_VALUE){
+        if (time != null && (time < 0 || time > R_TIME_MAX_VALUE)) {
             throw new InvalidInputException("Invalid time!");
         }
 
-        if (notes == null || notes.length() > R_NOTES_MAX_LENGTH){
+        if (notes != null && notes.length() > R_NOTES_MAX_LENGTH) {
             throw new InvalidInputException("Invalid notes!");
         }
 
-        if (positions == null || positions.size() < 1){
+        if (positions == null || positions.size() < 1) {
             throw new InvalidInputException("Invalid positions!");
         }
 
@@ -67,25 +70,87 @@ public class Routine implements RoutinesTable { // abstraction of the concept of
         this.notes = notes;
         this.positions = positions;
     }
-    
+
+    @NonNull
+    @Override
+    public String toString() {
+        return "Routine{" +
+                "name='" + name + '\'' +
+                ", author='" + author + '\'' +
+                ", color='" + color + '\'' +
+                ", uuid=" + uuid +
+                ", time=" + time +
+                ", isPublic=" + isPublic +
+                ", notes='" + notes + '\'' +
+                ", positions=" + positions.toString() +
+                '}';
+    }
+
+    public Routine(String name, Context context) throws InvalidInputException {
+
+        String[] columns = {R_COLUMN_AUTHOR, R_COLUMN_COLOR, R_COLUMN_UUID,
+                R_COLUMN_TIME, R_COLUMN_IS_PUBLIC, R_COLUMN_NOTES};
+
+        ArrayList<ArrayList<Object>> routines = Database.getInstance(context).selectRecords(
+                ROUTINES_TABLE, columns, R_COLUMN_NAME, name, null, null);
+
+        if (routines.size() == 0){
+            throw new InvalidInputException("A routine named \"" + name + "\" doesn't exist!");
+        }
+
+        ArrayList<Object> routine = routines.get(0);
+
+        this.name = name;
+        this.author = routine.get(0).toString();
+        this.color = routine.get(1).toString();
+        this.uuid = UUID.fromString(routine.get(2).toString());
+        this.time = (Integer) routine.get(3);
+        this.isPublic = (Integer) routine.get(4) != 0;
+        this.notes = routine.get(5).toString();
+
+        ArrayList<Position> positions = new ArrayList<>();
+
+        ArrayList<ArrayList<Object>> result2 = Database.getInstance(context).selectRecords(
+                encodeTableName(name), null, null, null, R_COLUMN_ID, true);
+
+        for (ArrayList<Object> i : result2){
+
+            Position pos = new Position((int) i.get(1), (int)i.get(2), (int) i.get(3),
+                    (Integer) i.get(4), (Integer) i.get(5), (String) i.get(6));
+
+            positions.add(pos);
+
+        }
+
+        this.positions = positions;
+    }
+
+//    public Routine(UUID uuid){
+//
+//    }
+
     // methods
 
-    public boolean save(Context context){
+    public boolean save(Context context) {
 
         Database db = Database.getInstance(context);
-        ArrayList<Object> values = new ArrayList<>(Arrays.asList(name, author, color, uuid, time, isPublic, notes));
+        ArrayList<Object> values = new ArrayList<>(Arrays.asList(name, author, color, uuid.toString(), time, isPublic, notes));
 
-        if (!db.insertRecord(ROUTINES_TABLE, values)){return false;}
+        if (!db.insertRecord(ROUTINES_TABLE, values)) {
+            return false;
+        }
 
         String table = encodeTableName(name);
         db.addPositionsTable(table);
 
-        for (Position pos: positions){
+        for (Position pos : positions) {
 
             boolean result = db.insertRecord(table, new ArrayList<>(Arrays.asList(pos.getXPos(), pos.getYPos(),
                     pos.getShotsCount(), pos.getPointsPerShot(), pos.getPointsPerLastShot(), pos.getNotes())));
 
-            if (!result) {return false;}
+            if (!result) {
+                return false;
+            }
         }
 
         return true;
@@ -94,15 +159,22 @@ public class Routine implements RoutinesTable { // abstraction of the concept of
     private String encodeTableName(String name) {
 
         try {
+
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            String hashString = android.util.Base64.encodeToString(digest.digest(name.getBytes(StandardCharsets.UTF_8)), Base64.DEFAULT);
-            return hashString.substring(0, hashString.length() - 2).replaceAll("[^a-zA-Z0-9]", "_");
+            byte[] hash = digest.digest(name.getBytes(StandardCharsets.UTF_8));
+
+            StringBuilder sb = new StringBuilder();
+            for (byte b : hash) {
+                sb.append(String.format("%02x", b));
+            }
+            return sb.toString();
+
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
             return name;
         }
     }
-    
+
     // getters
 
     public String getName() {
@@ -117,11 +189,11 @@ public class Routine implements RoutinesTable { // abstraction of the concept of
         return color;
     }
 
-    public String getUuid() {
+    public UUID getUuid() {
         return uuid;
     }
 
-    public int getTime() {
+    public Integer getTime() {
         return time;
     }
 

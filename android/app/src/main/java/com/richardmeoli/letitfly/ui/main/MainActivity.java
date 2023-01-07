@@ -60,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        Database.getInstance(this).getDbHelper().close();
+//        Database.getInstance(this).getDbHelper().close();
         super.onDestroy();
     }
 

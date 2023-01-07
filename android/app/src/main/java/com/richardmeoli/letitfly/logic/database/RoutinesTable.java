@@ -6,6 +6,7 @@ public interface RoutinesTable{
 
     // columns
 
+    String R_COLUMN_ID = "id";
     String R_COLUMN_NAME = "name";
     String R_COLUMN_AUTHOR = "author";
     String R_COLUMN_COLOR = "color";
@@ -16,7 +17,7 @@ public interface RoutinesTable{
 
     String[] R_COLUMNS = {R_COLUMN_NAME, R_COLUMN_AUTHOR, R_COLUMN_COLOR,
             R_COLUMN_UUID, R_COLUMN_TIME, R_COLUMN_IS_PUBLIC, R_COLUMN_NOTES};
-    String[] R_COLUMNS_ID_INCLUDED = {"id", R_COLUMN_NAME, R_COLUMN_AUTHOR,
+    String[] R_COLUMNS_ID_INCLUDED = {R_COLUMN_ID, R_COLUMN_NAME, R_COLUMN_AUTHOR,
             R_COLUMN_COLOR, R_COLUMN_UUID, R_COLUMN_TIME, R_COLUMN_IS_PUBLIC, R_COLUMN_NOTES};
 
     // values

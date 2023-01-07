@@ -81,8 +81,10 @@ public class Database extends SQLiteOpenHelper implements DatabaseContract {
                 record.put(key, (int) (values.get(index)));
             } else if (values.get(index) instanceof Boolean) {
                 record.put(key, (boolean) (values.get(index)));
-            } else {
+            } else if (values.get(index) instanceof String) {
                 record.put(key, (String) (values.get(index)));
+            } else {
+                record.putNull(key);
             }
 
             index++;
@@ -181,18 +183,27 @@ public class Database extends SQLiteOpenHelper implements DatabaseContract {
     }
 
     @Override
-    public ArrayList<ArrayList<String>> selectRecords(String table,
+    public ArrayList<ArrayList<Object>> selectRecords(String table,
                                                       String[] columns,
                                                       String whereColumn,
-                                                      Object value) {
+                                                      Object value,
+                                                      String sortingColumn,
+                                                      Boolean ascendent) {
         // selects the values of the selected 'columns' (pass null to select from all columns)
         // of the given 'table', where the column 'whereColumn' matches the given
         // parameter 'value' (pass null to select all rows).
-        // Grouping, having and sorting caluses are not included
+        // Results are sorted based on the parameter 'sortingColumn' (null if not needed),
+        // ascendent if true else descendent (null if not needed).
+        // Grouping and having caluses are not included
         // for better readability and because they are not useful in this application)
 
         String whereClause = whereColumn == null ? null : whereColumn + " = ?";
         String[] valuesClause = value == null ? null : new String[]{value.toString()};
+        String sortOrder = null;
+
+        if (sortingColumn != null && ascendent != null) {
+            sortOrder = sortingColumn + (ascendent ? " ASC" : " DESC");
+        }
 
         try (Cursor cursor = getDbHelper().query(
                 table,
@@ -201,9 +212,9 @@ public class Database extends SQLiteOpenHelper implements DatabaseContract {
                 valuesClause,
                 null,
                 null,
-                null)) {
+                sortOrder)) {
 
-            ArrayList<ArrayList<String>> result = new ArrayList<>();
+            ArrayList<ArrayList<Object>> result = new ArrayList<>();
 
             if (columns == null) {
 
@@ -225,9 +236,28 @@ public class Database extends SQLiteOpenHelper implements DatabaseContract {
 
             while (cursor.moveToNext()) {
 
-                ArrayList<String> item = new ArrayList<>();
+                ArrayList<Object> item = new ArrayList<>();
                 for (String i : columns) {
-                    item.add(cursor.getString(cursor.getColumnIndexOrThrow(i)));
+
+                    switch (cursor.getType(cursor.getColumnIndexOrThrow(i))) {
+
+                        case Cursor.FIELD_TYPE_INTEGER:
+                            item.add(cursor.getInt(cursor.getColumnIndexOrThrow(i)));
+                            break;
+                        case Cursor.FIELD_TYPE_NULL:
+                            item.add(null);
+                            break;
+                        case Cursor.FIELD_TYPE_STRING:
+                            item.add(cursor.getString(cursor.getColumnIndexOrThrow(i)));
+                            break;
+                        case Cursor.FIELD_TYPE_BLOB:
+                            item.add(cursor.getBlob(cursor.getColumnIndexOrThrow(i)));
+                            break;
+                        case Cursor.FIELD_TYPE_FLOAT:
+                            item.add(cursor.getFloat(cursor.getColumnIndexOrThrow(i)));
+                            break;
+                    }
+
                 }
 
                 result.add(item);
@@ -250,8 +280,8 @@ public class Database extends SQLiteOpenHelper implements DatabaseContract {
                 "\t'" + P_COLUMN_X_POS + "' MEDIUMINT NOT NULL,\n" +
                 "\t'" + P_COLUMN_Y_POS + "' MEDIUMINT NOT NULL,\n" +
                 "\t'" + P_COLUMN_SHOTS + "' SMALLINT NOT NULL,\n" +
-                "\t'" + P_COLUMN_PTS_PER_SHOT + "' SMALLINT,\n" +
-                "\t'" + P_COLUMN_PTS_PER_LAST_SHOT + "' SMALLINT,\n" +
+                "\t'" + P_COLUMN_PTS_PER_SHOT + "' SMALLINT DEFAULT 1,\n" +
+                "\t'" + P_COLUMN_PTS_PER_LAST_SHOT + "' SMALLINT DEFAULT 1,\n" +
                 "\t'" + P_COLUMN_NOTES + "' VARCHAR(" + P_NOTES_MAX_LENGTH + ")" +
                 ");");
     }
