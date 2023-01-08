@@ -13,9 +13,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.UUID;
 
@@ -59,11 +56,11 @@ public class RoutineFragment extends Fragment implements DatabaseAttributes {
         try {
 
             ArrayList<Position> positions = new ArrayList<>();
-            positions.add(new Position(50, 68, 140, 10, 5, "Dle \" raom'i"));
-            positions.add(new Position(40, 70, 150, 7, 19, "sss"));
-            positions.add(new Position(90, 60, 120, 5, 18, "lle \" ram'ice"));
-            positions.add(new Position(40, 80, 160, 3, 1, "Dle \" rom'ie"));
-            Routine routine = new Routine("cicarsdofcofmfbo", "richard", "#778899", UUID.randomUUID(), 10, true, null, positions);
+            positions.add(new Position(50, 68, 14, null, null, null));
+            positions.add(new Position(40, 70, 150, null, null, null));
+            positions.add(new Position(90, 60, 120, null, null, null));
+            positions.add(new Position(40, 80, 160, null, null, null));
+            Routine routine = new Routine("SUS", "LMAO", "#778899", UUID.randomUUID(), null, true, null, positions);
             Toast.makeText(requireContext(), String.valueOf(routine.save(requireContext())), Toast.LENGTH_SHORT).show();
             System.out.println(routine);
 

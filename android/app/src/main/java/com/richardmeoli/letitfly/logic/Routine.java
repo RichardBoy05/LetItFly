@@ -12,10 +12,11 @@ import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
 import com.richardmeoli.letitfly.logic.database.Database;
+import com.richardmeoli.letitfly.logic.database.PositionsTable;
 import com.richardmeoli.letitfly.logic.database.RoutinesTable;
 import com.richardmeoli.letitfly.logic.database.InvalidInputException;
 
-public class Routine implements RoutinesTable { // abstraction of the concept of Routine
+public class Routine implements RoutinesTable, PositionsTable { // abstraction of the concept of Routine
 
     // fields
 
@@ -41,7 +42,7 @@ public class Routine implements RoutinesTable { // abstraction of the concept of
             throw new InvalidInputException("Invalid author name!");
         }
 
-        if (color == null || color.length() != 7) {
+        if (color == null || color.length() != 7 || color.charAt(0) != '#') {
             throw new InvalidInputException("Invalid color!");
         }
 
@@ -53,7 +54,7 @@ public class Routine implements RoutinesTable { // abstraction of the concept of
             throw new InvalidInputException("Invalid time!");
         }
 
-        if (notes != null && notes.length() > R_NOTES_MAX_LENGTH) {
+        if (notes != null && (notes.length() > R_NOTES_MAX_LENGTH)) {
             throw new InvalidInputException("Invalid notes!");
         }
 
@@ -69,21 +70,6 @@ public class Routine implements RoutinesTable { // abstraction of the concept of
         this.isPublic = isPublic;
         this.notes = notes;
         this.positions = positions;
-    }
-
-    @NonNull
-    @Override
-    public String toString() {
-        return "Routine{" +
-                "name='" + name + '\'' +
-                ", author='" + author + '\'' +
-                ", color='" + color + '\'' +
-                ", uuid=" + uuid +
-                ", time=" + time +
-                ", isPublic=" + isPublic +
-                ", notes='" + notes + '\'' +
-                ", positions=" + positions.toString() +
-                '}';
     }
 
     public Routine(String name, Context context) throws InvalidInputException {
@@ -111,7 +97,7 @@ public class Routine implements RoutinesTable { // abstraction of the concept of
         ArrayList<Position> positions = new ArrayList<>();
 
         ArrayList<ArrayList<Object>> result2 = Database.getInstance(context).selectRecords(
-                encodeTableName(name), null, null, null, R_COLUMN_ID, true);
+                encodeTableName(name), P_COLUMNS, null, null, P_COLUMN_ID, true);
 
         for (ArrayList<Object> i : result2){
 
@@ -167,12 +153,27 @@ public class Routine implements RoutinesTable { // abstraction of the concept of
             for (byte b : hash) {
                 sb.append(String.format("%02x", b));
             }
-            return sb.toString();
+            return "T" + sb;
 
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
             return name;
         }
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return "Routine{" +
+                "name='" + name + '\'' +
+                ", author='" + author + '\'' +
+                ", color='" + color + '\'' +
+                ", uuid=" + uuid +
+                ", time=" + time +
+                ", isPublic=" + isPublic +
+                ", notes='" + notes + '\'' +
+                ", positions=" + positions.toString() +
+                '}';
     }
 
     // getters

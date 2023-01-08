@@ -13,18 +13,6 @@ public class Position implements PositionsTable { // abstraction of the concept 
     private final int yPos;
     private final int shotsCount;
 
-    @NonNull
-    @Override
-    public String toString() {
-        return "Position{" +
-                "xPos=" + xPos +
-                ", yPos=" + yPos +
-                ", shotsCount=" + shotsCount +
-                ", pointsPerShot=" + pointsPerShot +
-                ", pointsPerLastShot=" + pointsPerLastShot +
-                ", notes='" + notes + '\'' +
-                '}';
-    }
 
     private final Integer pointsPerShot;
     private final Integer pointsPerLastShot;
@@ -46,7 +34,7 @@ public class Position implements PositionsTable { // abstraction of the concept 
             throw new InvalidInputException("Invalid Points per last shot value!");
         }
 
-        if (notes != null && notes.length() > P_NOTES_MAX_LENGTH){
+        if (notes != null && (notes.length() > P_NOTES_MAX_LENGTH)){
             throw new InvalidInputException("Invalid notes!");
         }
 
@@ -57,6 +45,21 @@ public class Position implements PositionsTable { // abstraction of the concept 
         this.pointsPerLastShot = pointsPerLastShot;
         this.notes = notes;
 
+    }
+
+    // methods
+
+    @NonNull
+    @Override
+    public String toString() {
+        return "Position{" +
+                "xPos=" + xPos +
+                ", yPos=" + yPos +
+                ", shotsCount=" + shotsCount +
+                ", pointsPerShot=" + pointsPerShot +
+                ", pointsPerLastShot=" + pointsPerLastShot +
+                ", notes='" + notes + '\'' +
+                '}';
     }
 
     // getters

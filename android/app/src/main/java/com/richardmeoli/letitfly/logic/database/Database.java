@@ -127,7 +127,7 @@ public class Database extends SQLiteOpenHelper implements DatabaseContract {
 
         try {
 
-            return getDbHelper().insert(table, null, record) != -1;
+            return getDbHelper().insertWithOnConflict(table, null, record, SQLiteDatabase.CONFLICT_REPLACE) != -1;
 
         } catch (SQLiteException e) {
             e.printStackTrace();
@@ -172,9 +172,9 @@ public class Database extends SQLiteOpenHelper implements DatabaseContract {
 
         try {
 
-            return getDbHelper().update(table,
+            return getDbHelper().updateWithOnConflict(table,
                     buildContentValues(columnsToUpdate, newValues),
-                    whereClause, valuesClause) != 0;
+                    whereClause, valuesClause, SQLiteDatabase.CONFLICT_REPLACE) != 0;
 
         } catch (SQLiteException e) {
             e.printStackTrace();
@@ -280,8 +280,8 @@ public class Database extends SQLiteOpenHelper implements DatabaseContract {
                 "\t'" + P_COLUMN_X_POS + "' MEDIUMINT NOT NULL,\n" +
                 "\t'" + P_COLUMN_Y_POS + "' MEDIUMINT NOT NULL,\n" +
                 "\t'" + P_COLUMN_SHOTS + "' SMALLINT NOT NULL,\n" +
-                "\t'" + P_COLUMN_PTS_PER_SHOT + "' SMALLINT DEFAULT 1,\n" +
-                "\t'" + P_COLUMN_PTS_PER_LAST_SHOT + "' SMALLINT DEFAULT 1,\n" +
+                "\t'" + P_COLUMN_PTS_PER_SHOT + "' SMALLINT NOT NULL DEFAULT 1,\n" +
+                "\t'" + P_COLUMN_PTS_PER_LAST_SHOT + "' SMALLINT NOT NULL DEFAULT 1,\n" +
                 "\t'" + P_COLUMN_NOTES + "' VARCHAR(" + P_NOTES_MAX_LENGTH + ")" +
                 ");");
     }
