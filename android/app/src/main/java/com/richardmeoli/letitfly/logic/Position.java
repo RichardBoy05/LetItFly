@@ -41,8 +41,8 @@ public class Position implements PositionsTable { // abstraction of the concept 
         this.xPos = xPos;
         this.yPos = yPos;
         this.shotsCount = shotsCount;
-        this.pointsPerShot = pointsPerShot;
-        this.pointsPerLastShot = pointsPerLastShot;
+        this.pointsPerShot = pointsPerShot == null ? 1 : pointsPerShot;
+        this.pointsPerLastShot = pointsPerLastShot == null ? 1 : pointsPerLastShot;
         this.notes = notes;
 
     }

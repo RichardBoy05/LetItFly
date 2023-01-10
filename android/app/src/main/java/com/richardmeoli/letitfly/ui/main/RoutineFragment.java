@@ -55,17 +55,18 @@ public class RoutineFragment extends Fragment implements DatabaseAttributes {
 
         try {
 
-            ArrayList<Position> positions = new ArrayList<>();
-            positions.add(new Position(50, 68, 14, null, null, null));
-            positions.add(new Position(40, 70, 150, null, null, null));
-            positions.add(new Position(90, 60, 120, null, null, null));
-            positions.add(new Position(40, 80, 160, null, null, null));
-            Routine routine = new Routine("SUS", "LMAO", "#778899", UUID.randomUUID(), null, true, null, positions);
-            Toast.makeText(requireContext(), String.valueOf(routine.save(requireContext())), Toast.LENGTH_SHORT).show();
-            System.out.println(routine);
+//            ArrayList<Position> positions = new ArrayList<>();
+//            positions.add(new Position(50, 68, 14, null, 3, null));
+//            positions.add(new Position(40, 70, 150, 3, 6, null));
+//            positions.add(new Position(90, 60, 120, 10, null, null));
+//            positions.add(new Position(40, 80, 160, 9, 5, null));
+//            Routine routine = new Routine("fffff", "LMAO", "#778899", UUID.randomUUID(), null, true, null, positions);
+//            Toast.makeText(requireContext(), String.valueOf(routine.save(requireContext())), Toast.LENGTH_SHORT).show();
+//            System.out.println(routine);
 
-//            Routine routine = new Routine("dsds", requireContext());
-//            System.out.println(routine.toString());
+            Routine a = new Routine(UUID.fromString("2d66b4db-4a2e-47f2-8738-1be803d4d5b4"), requireContext());
+            System.out.println(a);
+
 
         } catch (InvalidInputException e) {
             Toast.makeText(requireContext(), e.toString(), Toast.LENGTH_SHORT).show();
