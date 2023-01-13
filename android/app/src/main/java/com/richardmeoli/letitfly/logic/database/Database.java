@@ -1,16 +1,16 @@
 package com.richardmeoli.letitfly.logic.database;
 
-import androidx.annotation.Nullable;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-
-import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.content.ContentValues;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
+import androidx.annotation.Nullable;
+
+import java.util.Arrays;
+import java.util.ArrayList;
+
 
 public class Database extends SQLiteOpenHelper implements DatabaseContract {
     /*
@@ -24,7 +24,7 @@ public class Database extends SQLiteOpenHelper implements DatabaseContract {
     private static SQLiteDatabase dbHelper;
 
     private static final String R_CREATION_STATEMENT = "CREATE TABLE IF NOT EXISTS '" + ROUTINES_TABLE + "' (\n" +
-            "\t'" + R_S_P_COLUMN_ID + "' INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,\n" +
+            "\t'" + R_COLUMN_ID + "' INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,\n" +
             "\t'" + R_COLUMN_NAME + "' VARCHAR(" + R_NAME_MAX_LENGTH + ") UNIQUE NOT NULL,\n" +
             "\t'" + R_COLUMN_AUTHOR + "' VARCHAR(" + R_AUTHOR_MAX_LENGTH + ") NOT NULL,\n" +
             "\t'" + R_COLUMN_COLOR + "' CHAR(7) NOT NULL,\n" +
@@ -35,15 +35,28 @@ public class Database extends SQLiteOpenHelper implements DatabaseContract {
             ");";
 
     private static final String S_CREATION_STATEMENT = "CREATE TABLE IF NOT EXISTS '" + STATS_TABLE + "'(\n" +
-            "\t'" + R_S_P_COLUMN_ID + "' INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,\n" +
-            "\t'" + S_COLUMN_DATE + "' DATETIME UNIQUE NOT NULL,\n" +
+            "\t'" + S_COLUMN_ID + "' INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,\n" +
             "\t'" + S_COLUMN_ROUTINE + "' VARCHAR(" + R_NAME_MAX_LENGTH + ") NOT NULL,\n" +
+            "\t'" + S_COLUMN_DATE + "' DATETIME UNIQUE NOT NULL,\n" +
             "\t'" + S_COLUMN_REPS + "' TINYINT NOT NULL,\n" +
-            "\t'" + S_COLUMN_OUTCOME + "' VARCHAR(" + S_OUTCOME_MAX_LENGTH + ") NOT NULL" +
+            "\t'" + S_COLUMN_OUTCOME + "' VARCHAR(" + S_OUTCOME_MAX_LENGTH + ") NOT NULL,\n" +
+            "\t FOREIGN KEY (" + S_COLUMN_ROUTINE + ") REFERENCES " + ROUTINES_TABLE + "(" + R_COLUMN_NAME + ") ON UPDATE CASCADE ON DELETE CASCADE" +
+            ");";
+
+    private static final String P_CREATION_STATEMENT =  "CREATE TABLE IF NOT EXISTS '" + POSITIONS_TABLE + "' (\n" +
+            "\t'" + P_COLUMN_ID + "' INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,\n" +
+            "\t'" + P_COLUMN_ROUTINE + "' VARCHAR(" + R_NAME_MAX_LENGTH + ") NOT NULL,\n" +
+            "\t'" + P_COLUMN_X_POS + "' MEDIUMINT NOT NULL,\n" +
+            "\t'" + P_COLUMN_Y_POS + "' MEDIUMINT NOT NULL,\n" +
+            "\t'" + P_COLUMN_SHOTS + "' SMALLINT NOT NULL,\n" +
+            "\t'" + P_COLUMN_PTS_PER_SHOT + "' SMALLINT NOT NULL,\n" +
+            "\t'" + P_COLUMN_PTS_PER_LAST_SHOT + "' SMALLINT NOT NULL,\n" +
+            "\t'" + P_COLUMN_NOTES + "' VARCHAR(" + P_NOTES_MAX_LENGTH + "),\n" +
+            "\t FOREIGN KEY (" + P_COLUMN_ROUTINE + ") REFERENCES " + ROUTINES_TABLE + "(" + R_COLUMN_NAME + ") ON UPDATE CASCADE ON DELETE CASCADE" +
             ");";
 
 
-    private Database(@Nullable Context context) {  // private so it's only accessible within the class
+    private Database(@Nullable Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
 
@@ -57,11 +70,17 @@ public class Database extends SQLiteOpenHelper implements DatabaseContract {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        // code executed at the first creation of the database
+        // code executed at the first creation of the database (tables creation)
 
         db.execSQL(R_CREATION_STATEMENT);
         db.execSQL(S_CREATION_STATEMENT);
+        db.execSQL(P_CREATION_STATEMENT);
 
+    }
+
+    @Override
+    public void onConfigure(SQLiteDatabase db) {
+        db.execSQL("PRAGMA foreign_keys = ON;");
     }
 
     @Override
@@ -69,6 +88,8 @@ public class Database extends SQLiteOpenHelper implements DatabaseContract {
 
         // TODO: consider implementing its functionalities in the future
     }
+
+    // database methods
 
     private ContentValues buildContentValues(String[] columns, ArrayList<Object> values) {
 
@@ -115,12 +136,15 @@ public class Database extends SQLiteOpenHelper implements DatabaseContract {
                 columns = S_COLUMNS;
                 break;
 
-            default:
+            case POSITIONS_TABLE:
                 if (values.size() != P_COLUMNS.length) {
                     return false;
                 }
                 columns = P_COLUMNS;
                 break;
+
+            default:
+                return false;
         }
 
         ContentValues record = buildContentValues(columns, values);
@@ -228,9 +252,12 @@ public class Database extends SQLiteOpenHelper implements DatabaseContract {
                         columns = S_COLUMNS_ID_INCLUDED;
                         break;
 
-                    default:
+                    case POSITIONS_TABLE:
                         columns = P_COLUMNS_ID_INCLUDED;
                         break;
+
+                    default:
+                        return null;
                 }
             }
 
@@ -270,20 +297,6 @@ public class Database extends SQLiteOpenHelper implements DatabaseContract {
             return null;
 
         }
-    }
-
-    public void addPositionsTable(String routineName) {
-        // adds a new position table
-
-        getDbHelper().execSQL("CREATE TABLE IF NOT EXISTS '" + routineName + "' (\n" +
-                "\t'" + R_S_P_COLUMN_ID + "' INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,\n" +
-                "\t'" + P_COLUMN_X_POS + "' MEDIUMINT NOT NULL,\n" +
-                "\t'" + P_COLUMN_Y_POS + "' MEDIUMINT NOT NULL,\n" +
-                "\t'" + P_COLUMN_SHOTS + "' SMALLINT NOT NULL,\n" +
-                "\t'" + P_COLUMN_PTS_PER_SHOT + "' SMALLINT NOT NULL,\n" +
-                "\t'" + P_COLUMN_PTS_PER_LAST_SHOT + "' SMALLINT NOT NULL,\n" +
-                "\t'" + P_COLUMN_NOTES + "' VARCHAR(" + P_NOTES_MAX_LENGTH + ")" +
-                ");");
     }
 
     public SQLiteDatabase getDbHelper() {

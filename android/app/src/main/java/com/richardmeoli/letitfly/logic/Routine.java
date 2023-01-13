@@ -1,19 +1,15 @@
 package com.richardmeoli.letitfly.logic;
 
 import android.content.Context;
-
 import androidx.annotation.NonNull;
 
+import java.util.UUID;
 import java.util.Arrays;
 import java.util.ArrayList;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.nio.charset.StandardCharsets;
-import java.util.UUID;
 
 import com.richardmeoli.letitfly.logic.database.Database;
-import com.richardmeoli.letitfly.logic.database.PositionsTable;
 import com.richardmeoli.letitfly.logic.database.RoutinesTable;
+import com.richardmeoli.letitfly.logic.database.PositionsTable;
 import com.richardmeoli.letitfly.logic.database.InvalidInputException;
 
 public class Routine implements RoutinesTable, PositionsTable { // abstraction of the concept of Routine
@@ -32,7 +28,7 @@ public class Routine implements RoutinesTable, PositionsTable { // abstraction o
     // constructors
 
     public Routine(String name, String author, String color, UUID uuid, Integer time, boolean isPublic, String notes, ArrayList<Position> positions) throws InvalidInputException {
-        // default constructor that builts a Routine object when all its parameters are given
+        // builts a Routine object with the parameters passed in the constructor
 
         if (name == null || name.length() < R_NAME_MIN_LENGTH || name.length() > R_NAME_MAX_LENGTH || !name.matches(R_NAME_VALID_CHARACTERS)) {
             throw new InvalidInputException("Invalid routine name!");
@@ -54,7 +50,7 @@ public class Routine implements RoutinesTable, PositionsTable { // abstraction o
             throw new InvalidInputException("Invalid time!");
         }
 
-        if (notes != null && (notes.length() > R_NOTES_MAX_LENGTH)) {
+        if (notes != null && (notes.length() < 1 || notes.length() > R_NOTES_MAX_LENGTH)) {
             throw new InvalidInputException("Invalid notes!");
         }
 
@@ -73,12 +69,13 @@ public class Routine implements RoutinesTable, PositionsTable { // abstraction o
     }
 
     public Routine(String name, Context context) throws InvalidInputException {
+        // builts a Routine object by selecting its values from the local database (select by name)
 
-        String[] columns = {R_COLUMN_AUTHOR, R_COLUMN_COLOR, R_COLUMN_UUID,
+        String[] r_columns = {R_COLUMN_AUTHOR, R_COLUMN_COLOR, R_COLUMN_UUID,
                 R_COLUMN_TIME, R_COLUMN_IS_PUBLIC, R_COLUMN_NOTES};
 
         ArrayList<ArrayList<Object>> routines = Database.getInstance(context).selectRecords(
-                ROUTINES_TABLE, columns, R_COLUMN_NAME, name, null, null);
+                ROUTINES_TABLE, r_columns, R_COLUMN_NAME, name, null, null);
 
         if (routines.size() == 0){
             throw new InvalidInputException("A routine named \"" + name + "\" doesn't exist!");
@@ -92,56 +89,19 @@ public class Routine implements RoutinesTable, PositionsTable { // abstraction o
         this.uuid = UUID.fromString(routine.get(2).toString());
         this.time = (Integer) routine.get(3);
         this.isPublic = (Integer) routine.get(4) != 0;
-        this.notes = routine.get(5).toString();
+        this.notes = routine.get(5) == null ? null : routine.get(5).toString();
 
         ArrayList<Position> positions = new ArrayList<>();
+        String[] p_columns = {P_COLUMN_X_POS, P_COLUMN_Y_POS, P_COLUMN_SHOTS,
+                P_COLUMN_PTS_PER_SHOT, P_COLUMN_PTS_PER_LAST_SHOT, P_COLUMN_NOTES};
 
         ArrayList<ArrayList<Object>> positionsResult = Database.getInstance(context).selectRecords(
-                encodeTableName(name), P_COLUMNS, null, null, P_COLUMN_ID, true);
+                POSITIONS_TABLE, p_columns, P_COLUMN_ROUTINE, name, P_COLUMN_ID, true);
 
         for (ArrayList<Object> i : positionsResult){
 
-            Position pos = new Position((int) i.get(1), (int)i.get(2), (int) i.get(3),
-                    (Integer) i.get(4), (Integer) i.get(5), (String) i.get(6));
-
-            positions.add(pos);
-
-        }
-
-        this.positions = positions;
-    }
-
-    public Routine(UUID uuid, Context context) throws InvalidInputException {
-
-        String[] columns = {R_COLUMN_NAME, R_COLUMN_AUTHOR, R_COLUMN_COLOR,
-                R_COLUMN_TIME, R_COLUMN_IS_PUBLIC, R_COLUMN_NOTES};
-
-        ArrayList<ArrayList<Object>> routines = Database.getInstance(context).selectRecords(
-                ROUTINES_TABLE, columns, R_COLUMN_UUID, uuid.toString(), null, null);
-
-        if (routines.size() == 0){
-            throw new InvalidInputException("A routine with the UUID \"" + uuid + "\" doesn't exist!");
-        }
-
-        ArrayList<Object> routine = routines.get(0);
-
-        this.name = routine.get(0).toString();
-        this.author = routine.get(1).toString();
-        this.color = routine.get(2).toString();
-        this.uuid = uuid;
-        this.time = (Integer) routine.get(3);
-        this.isPublic = (Integer) routine.get(4) != 0;
-        this.notes = routine.get(5).toString();
-
-        ArrayList<Position> positions = new ArrayList<>();
-
-        ArrayList<ArrayList<Object>> positionsResult = Database.getInstance(context).selectRecords(
-                encodeTableName(name), P_COLUMNS, null, null, P_COLUMN_ID, true);
-
-        for (ArrayList<Object> i : positionsResult){
-
-            Position pos = new Position((int) i.get(1), (int)i.get(2), (int) i.get(3),
-                    (Integer) i.get(4), (Integer) i.get(5), (String) i.get(6));
+            Position pos = new Position((int) i.get(0), (int)i.get(1), (int) i.get(2),
+                    (Integer) i.get(3), (Integer) i.get(4), (String) i.get(5));
 
             positions.add(pos);
 
@@ -151,7 +111,7 @@ public class Routine implements RoutinesTable, PositionsTable { // abstraction o
     }
 
 
-    // methods
+     // methods
 
     public boolean save(Context context) {
 
@@ -162,40 +122,24 @@ public class Routine implements RoutinesTable, PositionsTable { // abstraction o
             return false;
         }
 
-        String table = encodeTableName(name);
-        db.addPositionsTable(table);
-
         for (Position pos : positions) {
 
-            boolean result = db.insertRecord(table, new ArrayList<>(Arrays.asList(pos.getXPos(), pos.getYPos(),
+            boolean result = db.insertRecord(POSITIONS_TABLE, new ArrayList<>(Arrays.asList(name, pos.getXPos(), pos.getYPos(),
                     pos.getShotsCount(), pos.getPointsPerShot(), pos.getPointsPerLastShot(), pos.getNotes())));
 
             if (!result) {
+                db.deleteRecords(ROUTINES_TABLE, R_COLUMN_NAME, name);
                 return false;
             }
+        }
+
+        if (isPublic){
+            // TODO: add function to store the routine on the firebase database
         }
 
         return true;
     }
 
-    private String encodeTableName(String name) {
-
-        try {
-
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest(name.getBytes(StandardCharsets.UTF_8));
-
-            StringBuilder sb = new StringBuilder();
-            for (byte b : hash) {
-                sb.append(String.format("%02x", b));
-            }
-            return "T" + sb;
-
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-            return name;
-        }
-    }
 
     @NonNull
     @Override

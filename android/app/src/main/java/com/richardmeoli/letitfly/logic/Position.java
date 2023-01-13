@@ -2,8 +2,8 @@ package com.richardmeoli.letitfly.logic;
 
 import androidx.annotation.NonNull;
 
-import com.richardmeoli.letitfly.logic.database.InvalidInputException;
 import com.richardmeoli.letitfly.logic.database.PositionsTable;
+import com.richardmeoli.letitfly.logic.database.InvalidInputException;
 
 public class Position implements PositionsTable { // abstraction of the concept of Position
 
@@ -12,8 +12,6 @@ public class Position implements PositionsTable { // abstraction of the concept 
     private final int xPos;
     private final int yPos;
     private final int shotsCount;
-
-
     private final Integer pointsPerShot;
     private final Integer pointsPerLastShot;
     private final String notes;
@@ -34,15 +32,15 @@ public class Position implements PositionsTable { // abstraction of the concept 
             throw new InvalidInputException("Invalid Points per last shot value!");
         }
 
-        if (notes != null && (notes.length() > P_NOTES_MAX_LENGTH)){
+        if (notes != null && (notes.length() < 1 || notes.length() > P_NOTES_MAX_LENGTH)){
             throw new InvalidInputException("Invalid notes!");
         }
 
         this.xPos = xPos;
         this.yPos = yPos;
         this.shotsCount = shotsCount;
-        this.pointsPerShot = pointsPerShot == null ? 1 : pointsPerShot;
-        this.pointsPerLastShot = pointsPerLastShot == null ? 1 : pointsPerLastShot;
+        this.pointsPerShot = pointsPerShot == null ? 1 : pointsPerShot; // DEFAULT 1
+        this.pointsPerLastShot = pointsPerLastShot == null ? 1 : pointsPerLastShot; // DEFAULT 1
         this.notes = notes;
 
     }

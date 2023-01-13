@@ -23,12 +23,12 @@ public interface RoutinesTable{
     // values
 
     int R_NAME_MIN_LENGTH = 3;
-    int R_NAME_MAX_LENGTH = 25;
+    int R_NAME_MAX_LENGTH = 20;
     String R_NAME_VALID_CHARACTERS = "^[a-zA-Z0-9[ ]]+$";
     int R_AUTHOR_MIN_LENGTH = 3;
     int R_AUTHOR_MAX_LENGTH = 15;
     String R_AUTHOR_VALID_CHARACTERS = "^[a-zA-Z0-9[ ]]+$";
-    int R_NOTES_MAX_LENGTH = 100;
     int R_TIME_MAX_VALUE = 32767;
+    int R_NOTES_MAX_LENGTH = 100;
 
 }
