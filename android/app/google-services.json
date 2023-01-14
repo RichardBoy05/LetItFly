@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "901949556111",
+    "project_id": "richardmeoli-letitfly",
+    "storage_bucket": "richardmeoli-letitfly.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:901949556111:android:6fc3b459aac4b73cfe37fa",
+        "android_client_info": {
+          "package_name": "com.richardmeoli.letitfly"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "901949556111-sn9c9ci21kcgp8bt8u1skh2pikmcsin8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAKzm6BAfEtvTNL_1hqlnj9a24x7SNpafU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "901949556111-sn9c9ci21kcgp8bt8u1skh2pikmcsin8.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

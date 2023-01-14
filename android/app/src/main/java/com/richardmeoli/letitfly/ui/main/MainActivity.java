@@ -1,12 +1,12 @@
 package com.richardmeoli.letitfly.ui.main;
 
 import android.os.Bundle;
-import android.annotation.SuppressLint;
 import androidx.fragment.app.Fragment;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.richardmeoli.letitfly.R;
 import com.richardmeoli.letitfly.logic.database.Database;
 
@@ -24,9 +24,10 @@ public class MainActivity extends AppCompatActivity {
 
         bottomBar = findViewById(R.id.bottom_bar);
 
-        // database initialization
+        // databases initialization (maybe to remove)
 
         Database.getInstance(this);
+        FirebaseFirestore.getInstance();
 
         // basic configuration
 
