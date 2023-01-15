@@ -7,10 +7,10 @@ import java.util.UUID;
 import java.util.Arrays;
 import java.util.ArrayList;
 
-import com.richardmeoli.letitfly.logic.database.Database;
-import com.richardmeoli.letitfly.logic.database.RoutinesTable;
-import com.richardmeoli.letitfly.logic.database.PositionsTable;
-import com.richardmeoli.letitfly.logic.database.InvalidInputException;
+import com.richardmeoli.letitfly.logic.database.local.Database;
+import com.richardmeoli.letitfly.logic.database.local.RoutinesTable;
+import com.richardmeoli.letitfly.logic.database.local.PositionsTable;
+import com.richardmeoli.letitfly.logic.database.local.InvalidInputException;
 
 public class Routine implements RoutinesTable, PositionsTable { // abstraction of the concept of Routine
 
@@ -92,16 +92,16 @@ public class Routine implements RoutinesTable, PositionsTable { // abstraction o
         this.notes = routine.get(5) == null ? null : routine.get(5).toString();
 
         ArrayList<Position> positions = new ArrayList<>();
-        String[] p_columns = {P_COLUMN_X_POS, P_COLUMN_Y_POS, P_COLUMN_SHOTS,
-                P_COLUMN_PTS_PER_SHOT, P_COLUMN_PTS_PER_LAST_SHOT, P_COLUMN_NOTES};
+        String[] p_columns = {P_COLUMN_X_POS, P_COLUMN_Y_POS, P_COLUMN_IMG_WIDTH, P_COLUMN_IMG_HEIGHT,
+                P_COLUMN_SHOTS, P_COLUMN_PTS_PER_SHOT, P_COLUMN_PTS_PER_LAST_SHOT, P_COLUMN_NOTES};
 
         ArrayList<ArrayList<Object>> positionsResult = Database.getInstance(context).selectRecords(
                 POSITIONS_TABLE, p_columns, P_COLUMN_ROUTINE, name, P_COLUMN_ID, true);
 
         for (ArrayList<Object> i : positionsResult){
 
-            Position pos = new Position((int) i.get(0), (int)i.get(1), (int) i.get(2),
-                    (Integer) i.get(3), (Integer) i.get(4), (String) i.get(5));
+            Position pos = new Position((int) i.get(0), (int)i.get(1), (int)i.get(2), (int)i.get(3),
+                    (int) i.get(4), (Integer) i.get(5), (Integer) i.get(6), (String) i.get(7));
 
             positions.add(pos);
 
@@ -125,7 +125,7 @@ public class Routine implements RoutinesTable, PositionsTable { // abstraction o
         for (Position pos : positions) {
 
             boolean result = db.insertRecord(POSITIONS_TABLE, new ArrayList<>(Arrays.asList(name, pos.getXPos(), pos.getYPos(),
-                    pos.getShotsCount(), pos.getPointsPerShot(), pos.getPointsPerLastShot(), pos.getNotes())));
+                    pos.getImgWidth(), pos.getImgHeight(), pos.getShotsCount(), pos.getPointsPerShot(), pos.getPointsPerLastShot(), pos.getNotes())));
 
             if (!result) {
                 db.deleteRecords(ROUTINES_TABLE, R_COLUMN_NAME, name);

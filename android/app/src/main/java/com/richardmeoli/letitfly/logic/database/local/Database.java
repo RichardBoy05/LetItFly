@@ -1,4 +1,4 @@
-package com.richardmeoli.letitfly.logic.database;
+package com.richardmeoli.letitfly.logic.database.local;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -48,6 +48,8 @@ public class Database extends SQLiteOpenHelper implements DatabaseContract {
             "\t'" + P_COLUMN_ROUTINE + "' VARCHAR(" + R_NAME_MAX_LENGTH + ") NOT NULL,\n" +
             "\t'" + P_COLUMN_X_POS + "' MEDIUMINT NOT NULL,\n" +
             "\t'" + P_COLUMN_Y_POS + "' MEDIUMINT NOT NULL,\n" +
+            "\t'" + P_COLUMN_IMG_WIDTH + "' MEDIUMINT NOT NULL,\n" +
+            "\t'" + P_COLUMN_IMG_HEIGHT + "' MEDIUMINT NOT NULL,\n" +
             "\t'" + P_COLUMN_SHOTS + "' SMALLINT NOT NULL,\n" +
             "\t'" + P_COLUMN_PTS_PER_SHOT + "' SMALLINT NOT NULL,\n" +
             "\t'" + P_COLUMN_PTS_PER_LAST_SHOT + "' SMALLINT NOT NULL,\n" +

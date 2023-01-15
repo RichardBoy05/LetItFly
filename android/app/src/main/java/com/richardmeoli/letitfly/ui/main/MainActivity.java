@@ -8,7 +8,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.richardmeoli.letitfly.R;
-import com.richardmeoli.letitfly.logic.database.Database;
+import com.richardmeoli.letitfly.logic.database.local.Database;
 
 public class MainActivity extends AppCompatActivity {
 

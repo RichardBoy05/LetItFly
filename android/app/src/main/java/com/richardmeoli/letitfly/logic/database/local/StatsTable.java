@@ -1,4 +1,4 @@
-package com.richardmeoli.letitfly.logic.database;
+package com.richardmeoli.letitfly.logic.database.local;
 
 public interface StatsTable {
 

@@ -13,18 +13,17 @@ import androidx.fragment.app.Fragment;
 import com.richardmeoli.letitfly.R;
 import com.richardmeoli.letitfly.logic.Position;
 import com.richardmeoli.letitfly.logic.Routine;
-import com.richardmeoli.letitfly.logic.database.Database;
-import com.richardmeoli.letitfly.logic.database.DatabaseAttributes;
-import com.richardmeoli.letitfly.logic.database.InvalidInputException;
-import com.richardmeoli.letitfly.logic.database.RoutinesTable;
+import com.richardmeoli.letitfly.logic.database.local.DatabaseAttributes;
+import com.richardmeoli.letitfly.logic.database.local.InvalidInputException;
+import com.richardmeoli.letitfly.logic.database.online.FirebaseCallback;
+import com.richardmeoli.letitfly.logic.database.online.Firestore;
+import com.richardmeoli.letitfly.logic.database.online.FirestoreAttributes;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.UUID;
 
 
-public class RoutineFragment extends Fragment implements DatabaseAttributes {
+public class RoutineFragment extends Fragment implements DatabaseAttributes, FirestoreAttributes {
 
     private Button add;
     private Button delete;
@@ -54,27 +53,41 @@ public class RoutineFragment extends Fragment implements DatabaseAttributes {
 
         add.setOnClickListener(v -> {
 
-        try {
-
-            ArrayList<Position> positions = new ArrayList<>();
-            positions.add(new Position(50, 68, 5, null, 3, "sasasa"));
-            positions.add(new Position(40, 70, 150, 3, 6, "ss nç°*°ç\"'''''"));
-            positions.add(new Position(90, 60, 5, 10, null, null));
-            positions.add(new Position(40, 80, 160, 9, 5, "kizzi"));
-            Routine routine = new Routine("Richard", "opttibile", "#778899", UUID.randomUUID(), 10, false, null, positions);
-
-
+//        try {
+//
+//            ArrayList<Position> positions = new ArrayList<>();
+//            positions.add(new Position(50, 68, 5, 50, 50, null, 3, "sasasa"));
+//            positions.add(new Position(40, 70, 50, 50, 150, 3, 6, "ss nç°*°ç\"'''''"));
+//            positions.add(new Position(90, 60, 5, 50, 50, 10, null, null));
+//            positions.add(new Position(40, 80, 160, 50, 50, 9, 5, "kizzi"));
+//            Routine routine = new Routine("Richard", "opttibile", "#778899", UUID.randomUUID(), 10, false, null, positions);
+//
+//
 //            Toast.makeText(requireContext(), String.valueOf(routine.save(requireContext())), Toast.LENGTH_SHORT).show();
-//            ArrayList<Object> a = new ArrayList<>(Collections.singletonList("mirco cicardoi"));
-//            Database.getInstance(requireContext()).updateRecords(RoutinesTable.ROUTINES_TABLE, RoutinesTable.R_COLUMN_NAME, "Richard", new String[]{RoutinesTable.R_COLUMN_NAME}, a);
+////            ArrayList<Object> a = new ArrayList<>(Collections.singletonList("mirco cicardoi"));
+////            Database.getInstance(requireContext()).updateRecords(RoutinesTable.ROUTINES_TABLE, RoutinesTable.R_COLUMN_NAME, "Richard", new String[]{RoutinesTable.R_COLUMN_NAME}, a);
+//
+//
+//
+//        } catch (InvalidInputException e) {
+//            Toast.makeText(requireContext(), e.toString(), Toast.LENGTH_SHORT).show();
+//            e.printStackTrace();
+//        }
 
+            Object[] o = new Object[]{"RichardRoutine", "Routinme", "asasa", 8, "sasas"};
 
+            Firestore fs = Firestore.getInstance();
+            fs.storeDocument(UUID.randomUUID(), ROUTINES_COLLECTION, o, new FirebaseCallback() {
+                @Override
+                public void onSuccess() {
+                    Toast.makeText(requireContext(), "lessgo", Toast.LENGTH_SHORT).show();
+                }
 
-        } catch (InvalidInputException e) {
-            Toast.makeText(requireContext(), e.toString(), Toast.LENGTH_SHORT).show();
-            e.printStackTrace();
-        }
-
+                @Override
+                public void onFailure() {
+                    Toast.makeText(requireContext(), "I suck", Toast.LENGTH_SHORT).show();
+                }
+            });
 
     });
 
