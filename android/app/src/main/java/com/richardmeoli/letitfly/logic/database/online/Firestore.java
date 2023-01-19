@@ -1,8 +1,6 @@
 package com.richardmeoli.letitfly.logic.database.online;
 
 import android.util.Log;
-import android.widget.Toast;
-
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.HashMap;
@@ -27,7 +25,7 @@ public class Firestore implements FirestoreContract {
 
 
     @Override
-    public void storeDocument(UUID uuid, String collection, Object[] values, final FirebaseCallback callback) {
+    public void storeDocument(String uuid, String collection, Object[] values, final FirebaseCallback callback) {
 
         String[] keys;
 

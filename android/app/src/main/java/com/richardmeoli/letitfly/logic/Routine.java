@@ -1,6 +1,7 @@
 package com.richardmeoli.letitfly.logic;
 
 import android.content.Context;
+
 import androidx.annotation.NonNull;
 
 import java.util.UUID;
@@ -11,8 +12,11 @@ import com.richardmeoli.letitfly.logic.database.local.Database;
 import com.richardmeoli.letitfly.logic.database.local.RoutinesTable;
 import com.richardmeoli.letitfly.logic.database.local.PositionsTable;
 import com.richardmeoli.letitfly.logic.database.local.InvalidInputException;
+import com.richardmeoli.letitfly.logic.database.online.FirebaseCallback;
+import com.richardmeoli.letitfly.logic.database.online.Firestore;
+import com.richardmeoli.letitfly.logic.database.online.FirestoreAttributes;
 
-public class Routine implements RoutinesTable, PositionsTable { // abstraction of the concept of Routine
+public class Routine implements RoutinesTable, PositionsTable, FirestoreAttributes { // abstraction of the concept of Routine
 
     // fields
 
@@ -77,7 +81,7 @@ public class Routine implements RoutinesTable, PositionsTable { // abstraction o
         ArrayList<ArrayList<Object>> routines = Database.getInstance(context).selectRecords(
                 ROUTINES_TABLE, r_columns, R_COLUMN_NAME, name, null, null);
 
-        if (routines.size() == 0){
+        if (routines.size() == 0) {
             throw new InvalidInputException("A routine named \"" + name + "\" doesn't exist!");
         }
 
@@ -98,9 +102,9 @@ public class Routine implements RoutinesTable, PositionsTable { // abstraction o
         ArrayList<ArrayList<Object>> positionsResult = Database.getInstance(context).selectRecords(
                 POSITIONS_TABLE, p_columns, P_COLUMN_ROUTINE, name, P_COLUMN_ID, true);
 
-        for (ArrayList<Object> i : positionsResult){
+        for (ArrayList<Object> i : positionsResult) {
 
-            Position pos = new Position((int) i.get(0), (int)i.get(1), (int)i.get(2), (int)i.get(3),
+            Position pos = new Position((int) i.get(0), (int) i.get(1), (int) i.get(2), (int) i.get(3),
                     (int) i.get(4), (Integer) i.get(5), (Integer) i.get(6), (String) i.get(7));
 
             positions.add(pos);
@@ -111,7 +115,7 @@ public class Routine implements RoutinesTable, PositionsTable { // abstraction o
     }
 
 
-     // methods
+    // methods
 
     public boolean save(Context context) {
 
@@ -133,11 +137,60 @@ public class Routine implements RoutinesTable, PositionsTable { // abstraction o
             }
         }
 
-        if (isPublic){
-            // TODO: add function to store the routine on the firebase database
+        if (isPublic) {
+            return uploadToFirestore();
         }
 
         return true;
+    }
+
+    private boolean uploadToFirestore() {
+
+        Firestore fs = Firestore.getInstance();
+        final boolean[] result = new boolean[1];
+
+        fs.storeDocument(uuid.toString(), ROUTINES_COLLECTION, new Object[]{name, author, color, time, notes}, new FirebaseCallback() {
+            @Override
+            public void onSuccess() {
+                result[0] = true;
+            }
+
+            @Override
+            public void onFailure() {
+                result[0] = false;
+            }
+        });
+
+
+
+//        if (!result[0]) {
+//            return false;
+//        }
+
+        int index = 1;
+        for (Position pos : positions) {
+
+            fs.storeDocument(UUID.randomUUID().toString() + "(" + index + ")", POSITIONS_COLLECTION, new Object[]{pos.getXPos(), pos.getYPos(),
+                    pos.getImgWidth(), pos.getImgHeight(), pos.getShotsCount(),
+                    pos.getPointsPerShot(), pos.getPointsPerLastShot(), pos.getNotes()}, new FirebaseCallback() {
+
+                @Override
+                public void onSuccess() {
+
+                }
+
+                @Override
+                public void onFailure() {
+
+                    result[0] = false;
+                }
+            });
+
+            index ++;
+        }
+
+
+        return result[0];
     }
 
 
