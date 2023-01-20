@@ -15,8 +15,6 @@ import com.richardmeoli.letitfly.logic.Position;
 import com.richardmeoli.letitfly.logic.Routine;
 import com.richardmeoli.letitfly.logic.database.local.DatabaseAttributes;
 import com.richardmeoli.letitfly.logic.database.local.InvalidInputException;
-import com.richardmeoli.letitfly.logic.database.online.FirebaseCallback;
-import com.richardmeoli.letitfly.logic.database.online.Firestore;
 import com.richardmeoli.letitfly.logic.database.online.FirestoreAttributes;
 
 import java.util.ArrayList;
@@ -63,7 +61,7 @@ public class RoutineFragment extends Fragment implements DatabaseAttributes, Fir
             Routine routine = new Routine("Richard", "opttibile", "#778899", UUID.randomUUID(), 10, true, null, positions);
 
 
-            Toast.makeText(requireContext(), String.valueOf(routine.save(requireContext())), Toast.LENGTH_SHORT).show();
+            Toast.makeText(requireContext(), String.valueOf(routine.add(requireContext())), Toast.LENGTH_SHORT).show();
 
 
         } catch (InvalidInputException e) {

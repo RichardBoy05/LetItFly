@@ -1,22 +1,26 @@
 package com.richardmeoli.letitfly.logic.database.online;
 
 import android.util.Log;
+
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 public class Firestore implements FirestoreContract {
 
     private static Firestore instance;
     private static final String TAG = "Firestore";
 
-    private Firestore() {}
+    private Firestore() {
+    }
 
     public static Firestore getInstance() {
 
-        if (instance == null){
+        if (instance == null) {
             instance = new Firestore();
         }
 
@@ -25,11 +29,11 @@ public class Firestore implements FirestoreContract {
 
 
     @Override
-    public void storeDocument(String uuid, String collection, Object[] values, final FirebaseCallback callback) {
+    public boolean storeDocument(String collection, String uuid, Object[] values) {
 
         String[] keys;
 
-        switch (collection){
+        switch (collection) {
 
             case ROUTINES_COLLECTION:
                 keys = R_FIELDS;
@@ -40,35 +44,49 @@ public class Firestore implements FirestoreContract {
                 break;
 
             default:
-                callback.onFailure();
-                return;
+                return false;
         }
 
-        if (keys.length != values.length){
-            callback.onFailure();
-            return;
+        if (keys.length != values.length) {
+            return false;
         }
 
         Map<String, Object> document = new HashMap<>();
         int index = 0;
 
-        for (String key: keys){
+        for (String key : keys) {
             document.put(key, values[index]);
-            index ++;
+            index++;
         }
 
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
-        db.collection(collection).document(uuid.toString())
+        Task<Void> task = db.collection(collection).document(uuid)
                 .set(document)
                 .addOnSuccessListener(documentReference -> {
                     Log.d(TAG, "DocumentSnapshot added with ID: " + uuid);
-                    callback.onSuccess();
                 })
                 .addOnFailureListener(e -> {
                     Log.w(TAG, "Error adding document", e);
-                    callback.onFailure();
                 });
+
+        return task.isSuccessful();
+
+    }
+
+    @Override
+    public boolean deleteDocument(String collection, String uuid) {
+
+        FirebaseFirestore fs = FirebaseFirestore.getInstance();
+        Task<Void> task =  fs.collection("collections").document(uuid).delete()
+                .addOnSuccessListener(aVoid -> {
+                    Log.d(TAG, "Collection successfully deleted!");
+                })
+                .addOnFailureListener(e -> {
+                    Log.w(TAG, "Error deleting collection", e);
+                });
+
+        return task.isSuccessful();
 
     }
 }

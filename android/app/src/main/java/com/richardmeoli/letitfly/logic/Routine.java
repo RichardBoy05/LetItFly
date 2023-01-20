@@ -12,7 +12,6 @@ import com.richardmeoli.letitfly.logic.database.local.Database;
 import com.richardmeoli.letitfly.logic.database.local.RoutinesTable;
 import com.richardmeoli.letitfly.logic.database.local.PositionsTable;
 import com.richardmeoli.letitfly.logic.database.local.InvalidInputException;
-import com.richardmeoli.letitfly.logic.database.online.FirebaseCallback;
 import com.richardmeoli.letitfly.logic.database.online.Firestore;
 import com.richardmeoli.letitfly.logic.database.online.FirestoreAttributes;
 
@@ -117,7 +116,7 @@ public class Routine implements RoutinesTable, PositionsTable, FirestoreAttribut
 
     // methods
 
-    public boolean save(Context context) {
+    public boolean add(Context context) {
 
         Database db = Database.getInstance(context);
         ArrayList<Object> values = new ArrayList<>(Arrays.asList(name, author, color, uuid.toString(), time, isPublic, notes));
@@ -147,50 +146,31 @@ public class Routine implements RoutinesTable, PositionsTable, FirestoreAttribut
     private boolean uploadToFirestore() {
 
         Firestore fs = Firestore.getInstance();
-        final boolean[] result = new boolean[1];
+        boolean result = fs.storeDocument(ROUTINES_COLLECTION, uuid.toString(), new Object[]{name, author, color, time, notes});
+        System.out.println(result + "sdaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
 
-        fs.storeDocument(uuid.toString(), ROUTINES_COLLECTION, new Object[]{name, author, color, time, notes}, new FirebaseCallback() {
-            @Override
-            public void onSuccess() {
-                result[0] = true;
-            }
-
-            @Override
-            public void onFailure() {
-                result[0] = false;
-            }
-        });
-
-
-
-//        if (!result[0]) {
-//            return false;
-//        }
+        if (!result) {return false;}
 
         int index = 1;
         for (Position pos : positions) {
 
-            fs.storeDocument(UUID.randomUUID().toString() + "(" + index + ")", POSITIONS_COLLECTION, new Object[]{pos.getXPos(), pos.getYPos(),
+            result = fs.storeDocument(POSITIONS_COLLECTION, uuid + "(" + index + ")", new Object[]{pos.getXPos(), pos.getYPos(),
                     pos.getImgWidth(), pos.getImgHeight(), pos.getShotsCount(),
-                    pos.getPointsPerShot(), pos.getPointsPerLastShot(), pos.getNotes()}, new FirebaseCallback() {
+                    pos.getPointsPerShot(), pos.getPointsPerLastShot(), pos.getNotes()});
 
-                @Override
-                public void onSuccess() {
-
+            if (!result){
+                for (int i = 1; i < index; i++){
+                    fs.deleteDocument(POSITIONS_COLLECTION, uuid + "(" + i + ")");
                 }
-
-                @Override
-                public void onFailure() {
-
-                    result[0] = false;
-                }
-            });
+                return false;
+            }
 
             index ++;
         }
 
 
-        return result[0];
+        return true;
+
     }
 
 
