@@ -1,12 +1,18 @@
 package com.richardmeoli.letitfly.logic;
 
 import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
 
 import androidx.annotation.NonNull;
 
 import java.util.UUID;
 import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
 
 import com.richardmeoli.letitfly.logic.database.local.Database;
 import com.richardmeoli.letitfly.logic.database.local.RoutinesTable;
@@ -146,28 +152,43 @@ public class Routine implements RoutinesTable, PositionsTable, FirestoreAttribut
     private boolean uploadToFirestore() {
 
         Firestore fs = Firestore.getInstance();
-        boolean result = fs.storeDocument(ROUTINES_COLLECTION, uuid.toString(), new Object[]{name, author, color, time, notes});
-        System.out.println(result + "sdaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+        final boolean[] result = {false};
 
-        if (!result) {return false;}
+        fs.storeDocument(ROUTINES_COLLECTION, uuid.toString(), new Object[]{name, author, color, time, notes}, success -> {
+            if (success) {
+                result[0] = true;
+            } else {
+                result[0] = false;
+            }
+
+        });
+
+
+
+        if (!result[0]) {return false;}
 
         int index = 1;
         for (Position pos : positions) {
 
-            result = fs.storeDocument(POSITIONS_COLLECTION, uuid + "(" + index + ")", new Object[]{pos.getXPos(), pos.getYPos(),
+            fs.storeDocument(POSITIONS_COLLECTION, uuid + " (" + index + ")", new Object[]{pos.getXPos(), pos.getYPos(),
                     pos.getImgWidth(), pos.getImgHeight(), pos.getShotsCount(),
-                    pos.getPointsPerShot(), pos.getPointsPerLastShot(), pos.getNotes()});
+                    pos.getPointsPerShot(), pos.getPointsPerLastShot(), pos.getNotes()}, success -> {
+                        if (success) {
+                            result[0] = true;
+                        } else {
+                            result[0] = false;
+                        }
+                    });
 
-            if (!result){
-                for (int i = 1; i < index; i++){
+            if (!result[0]) {
+                for (int i = 1; i < index; i++) {
                     fs.deleteDocument(POSITIONS_COLLECTION, uuid + "(" + i + ")");
                 }
                 return false;
             }
 
-            index ++;
+            index++;
         }
-
 
         return true;
 
