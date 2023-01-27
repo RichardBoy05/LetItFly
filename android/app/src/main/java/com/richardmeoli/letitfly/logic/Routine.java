@@ -1,24 +1,18 @@
 package com.richardmeoli.letitfly.logic;
 
 import android.content.Context;
-import android.os.Handler;
-import android.os.Looper;
-
 import androidx.annotation.NonNull;
 
 import java.util.UUID;
 import java.util.Arrays;
 import java.util.ArrayList;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Semaphore;
 
 import com.richardmeoli.letitfly.logic.database.local.Database;
 import com.richardmeoli.letitfly.logic.database.local.RoutinesTable;
 import com.richardmeoli.letitfly.logic.database.local.PositionsTable;
 import com.richardmeoli.letitfly.logic.database.local.InvalidInputException;
 import com.richardmeoli.letitfly.logic.database.online.Firestore;
+import com.richardmeoli.letitfly.logic.database.online.FirestoreCallback;
 import com.richardmeoli.letitfly.logic.database.online.FirestoreAttributes;
 
 public class Routine implements RoutinesTable, PositionsTable, FirestoreAttributes { // abstraction of the concept of Routine
@@ -122,13 +116,13 @@ public class Routine implements RoutinesTable, PositionsTable, FirestoreAttribut
 
     // methods
 
-    public boolean add(Context context) {
+    public void save(Context context, final FirestoreCallback callback) {
 
         Database db = Database.getInstance(context);
         ArrayList<Object> values = new ArrayList<>(Arrays.asList(name, author, color, uuid.toString(), time, isPublic, notes));
 
         if (!db.insertRecord(ROUTINES_TABLE, values)) {
-            return false;
+            callback.onFailure();
         }
 
         for (Position pos : positions) {
@@ -138,61 +132,61 @@ public class Routine implements RoutinesTable, PositionsTable, FirestoreAttribut
 
             if (!result) {
                 db.deleteRecords(ROUTINES_TABLE, R_COLUMN_NAME, name);
-                return false;
+                callback.onFailure();
             }
         }
 
         if (isPublic) {
-            return uploadToFirestore();
-        }
 
-        return true;
-    }
+            Firestore fs = Firestore.getInstance();
 
-    private boolean uploadToFirestore() {
+            fs.storeDocument(ROUTINES_COLLECTION, uuid.toString(), new Object[]{name, author, color, time, notes}, new FirestoreCallback() {
+                @Override
+                public void onSuccess() {
 
-        Firestore fs = Firestore.getInstance();
-        final boolean[] result = {false};
+                    for (int i = 1; i < positions.size(); i++) {
 
-        fs.storeDocument(ROUTINES_COLLECTION, uuid.toString(), new Object[]{name, author, color, time, notes}, success -> {
-            if (success) {
-                result[0] = true;
-            } else {
-                result[0] = false;
-            }
+                        fs.storeDocument(POSITIONS_COLLECTION, uuid + " (" + i + ")", new Object[]{positions.get(i).getXPos(), positions.get(i).getYPos(),
+                                positions.get(i).getImgWidth(), positions.get(i).getImgHeight(), positions.get(i).getShotsCount(),
+                                positions.get(i).getPointsPerShot(), positions.get(i).getPointsPerLastShot(), positions.get(i).getNotes()}, new FirestoreCallback() {
 
-        });
+                            @Override
+                            public void onSuccess() {
+                                callback.onSuccess();
+                            }
 
+                            @Override
+                            public void onFailure() {
 
+                                fs.deleteDocument(ROUTINES_COLLECTION, uuid.toString(), new FirestoreCallback() {
+                                    @Override
+                                    public void onSuccess() {
+                                        callback.onFailure();
+                                    }
 
-        if (!result[0]) {return false;}
+                                    @Override
+                                    public void onFailure() {
+                                        callback.onFailure();
 
-        int index = 1;
-        for (Position pos : positions) {
+                                    }
+                                });
 
-            fs.storeDocument(POSITIONS_COLLECTION, uuid + " (" + index + ")", new Object[]{pos.getXPos(), pos.getYPos(),
-                    pos.getImgWidth(), pos.getImgHeight(), pos.getShotsCount(),
-                    pos.getPointsPerShot(), pos.getPointsPerLastShot(), pos.getNotes()}, success -> {
-                        if (success) {
-                            result[0] = true;
-                        } else {
-                            result[0] = false;
-                        }
-                    });
+                            }
+                        });
 
-            if (!result[0]) {
-                for (int i = 1; i < index; i++) {
-                    fs.deleteDocument(POSITIONS_COLLECTION, uuid + "(" + i + ")");
+                    }
+
                 }
-                return false;
-            }
 
-            index++;
+                @Override
+                public void onFailure() {
+                    callback.onFailure();
+                }
+            });
         }
 
-        return true;
-
     }
+
 
 
     @NonNull

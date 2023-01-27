@@ -1,17 +1,14 @@
 package com.richardmeoli.letitfly.logic.database.online;
 
-import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
 
-import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.HashMap;
 
 public class Firestore implements FirestoreContract {
 
@@ -30,7 +27,7 @@ public class Firestore implements FirestoreContract {
 
 
     @Override
-    public boolean storeDocument(String collection, String id, Object[] values) {
+    public void storeDocument(String collection, @Nullable String id, Object[] values, final FirestoreCallback callback) {
         // stores a Document to the Firestore Database with the specified "id" and values;
         // pass a null id to make it generate directly by Firestore
 
@@ -47,11 +44,13 @@ public class Firestore implements FirestoreContract {
                 break;
 
             default:
-                return false;
+                callback.onFailure();
+                return;
         }
 
         if (keys.length != values.length) {
-            return false;
+            callback.onFailure();
+            return;
         }
 
         Map<String, Object> document = new HashMap<>();
@@ -63,50 +62,74 @@ public class Firestore implements FirestoreContract {
         }
 
         FirebaseFirestore db = FirebaseFirestore.getInstance();
-        AtomicBoolean result = new AtomicBoolean(false);
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        Handler handler = new Handler(Looper.getMainLooper());
 
-        executor.execute(() -> {
+        if (id == null) {
 
+            db.collection(collection).add(document)
+                    .addOnSuccessListener(documentReference -> {
+                        Log.d(TAG, "DocumentSnapshot added with ID: " + documentReference.getId());
+                        callback.onSuccess();
+                    })
+                    .addOnFailureListener(e -> {
+                        Log.w(TAG, "Error writing document", e);
+                        callback.onFailure();
+                    });
+
+        } else {
 
             db.collection(collection).document(id)
                     .set(document)
                     .addOnSuccessListener(aVoid -> {
-                        Log.d(TAG, "DocumentSnapshot successfully written!");
-                        result2 = true;
+                        Log.d(TAG, "DocumentSnapshot added with ID: " + id);
+                        callback.onSuccess();
                     })
                     .addOnFailureListener(e -> {
                         Log.w(TAG, "Error writing document", e);
-                        result.set(false);
+                        callback.onFailure();
                     });
-
-            handler.post(() -> {
-
-                return null;
-
-            });
-        });
-
-
+        }
 
     }
 
     @Override
-    public boolean deleteDocument(String collection, String id) {
-        // deletes a Document from the Firestore Database by its "id";
+    public void readDocument(String collection, String id, FirestoreCallback callback) {
 
-        FirebaseFirestore fs = FirebaseFirestore.getInstance();
-        Task<Void> task = fs.collection("collections").document(id).delete()
-                .addOnSuccessListener(aVoid -> {
-                    Log.d(TAG, "Collection successfully deleted!");
-                })
-                .addOnFailureListener(e -> {
-                    Log.w(TAG, "Error deleting collection", e);
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        db.collection(collection)
+                .get()
+                .addOnCompleteListener(task -> {
+
+                    if (task.isSuccessful()) {
+                        for (QueryDocumentSnapshot document : task.getResult()) {
+                            callback.onRead();
+                            Log.d(TAG, document.getId() + " => " + document.getData());
+                        }
+                    } else {
+                        Log.w(TAG, "Error getting documents.", task.getException());
+                    }
                 });
 
-        return task.isSuccessful();
+    }
+
+    public void deleteDocument(String collection, @NonNull String id, final FirestoreCallback callback) {
+        // deletes a Document from the Firestore Database by its "id";
+
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        db.collection(collection).document(id)
+                .delete()
+                .addOnSuccessListener(aVoid -> {
+                    Log.d(TAG, "DocumentSnapshot successfully deleted!");
+                    callback.onSuccess();
+                })
+                .addOnFailureListener(e -> {
+                    Log.w(TAG, "Error deleting document", e);
+                    callback.onFailure();
+                });
+
 
     }
+
 }
 
