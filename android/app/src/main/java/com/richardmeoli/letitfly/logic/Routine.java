@@ -12,8 +12,8 @@ import com.richardmeoli.letitfly.logic.database.local.RoutinesTable;
 import com.richardmeoli.letitfly.logic.database.local.PositionsTable;
 import com.richardmeoli.letitfly.logic.database.local.InvalidInputException;
 import com.richardmeoli.letitfly.logic.database.online.Firestore;
-import com.richardmeoli.letitfly.logic.database.online.FirestoreCallback;
 import com.richardmeoli.letitfly.logic.database.online.FirestoreAttributes;
+import com.richardmeoli.letitfly.logic.database.online.FirestoreOnTransactionCallback;
 
 public class Routine implements RoutinesTable, PositionsTable, FirestoreAttributes { // abstraction of the concept of Routine
 
@@ -116,7 +116,7 @@ public class Routine implements RoutinesTable, PositionsTable, FirestoreAttribut
 
     // methods
 
-    public void save(Context context, final FirestoreCallback callback) {
+    public void save(Context context, final FirestoreOnTransactionCallback callback) {
 
         Database db = Database.getInstance(context);
         ArrayList<Object> values = new ArrayList<>(Arrays.asList(name, author, color, uuid.toString(), time, isPublic, notes));
@@ -138,53 +138,71 @@ public class Routine implements RoutinesTable, PositionsTable, FirestoreAttribut
 
         if (isPublic) {
 
-            Firestore fs = Firestore.getInstance();
-
-            fs.storeDocument(ROUTINES_COLLECTION, uuid.toString(), new Object[]{name, author, color, time, notes}, new FirestoreCallback() {
+            uploadToFirestore(new FirestoreOnTransactionCallback() {
                 @Override
                 public void onSuccess() {
-
-                    for (int i = 1; i < positions.size(); i++) {
-
-                        fs.storeDocument(POSITIONS_COLLECTION, uuid + " (" + i + ")", new Object[]{positions.get(i).getXPos(), positions.get(i).getYPos(),
-                                positions.get(i).getImgWidth(), positions.get(i).getImgHeight(), positions.get(i).getShotsCount(),
-                                positions.get(i).getPointsPerShot(), positions.get(i).getPointsPerLastShot(), positions.get(i).getNotes()}, new FirestoreCallback() {
-
-                            @Override
-                            public void onSuccess() {
-                                callback.onSuccess();
-                            }
-
-                            @Override
-                            public void onFailure() {
-
-                                fs.deleteDocument(ROUTINES_COLLECTION, uuid.toString(), new FirestoreCallback() {
-                                    @Override
-                                    public void onSuccess() {
-                                        callback.onFailure();
-                                    }
-
-                                    @Override
-                                    public void onFailure() {
-                                        callback.onFailure();
-
-                                    }
-                                });
-
-                            }
-                        });
-
-                    }
-
+                    callback.onSuccess();
                 }
 
                 @Override
                 public void onFailure() {
                     callback.onFailure();
+
                 }
+
             });
+
         }
 
+    }
+
+    private void uploadToFirestore(final FirestoreOnTransactionCallback callback){
+
+        Firestore fs = Firestore.getInstance();
+
+        fs.storeDocument(ROUTINES_COLLECTION, uuid.toString(), new Object[]{name, author, color, time, notes}, new FirestoreOnTransactionCallback() {
+            @Override
+            public void onSuccess() {
+
+                for (int i = 1; i < positions.size(); i++) {
+
+                    fs.storeDocument(POSITIONS_COLLECTION, uuid + " (" + i + ")", new Object[]{positions.get(i).getXPos(), positions.get(i).getYPos(),
+                            positions.get(i).getImgWidth(), positions.get(i).getImgHeight(), positions.get(i).getShotsCount(),
+                            positions.get(i).getPointsPerShot(), positions.get(i).getPointsPerLastShot(), positions.get(i).getNotes()}, new FirestoreOnTransactionCallback() {
+
+                        @Override
+                        public void onSuccess() {
+                            callback.onSuccess();
+                        }
+
+                        @Override
+                        public void onFailure() {
+
+                            fs.deleteDocument(ROUTINES_COLLECTION, uuid.toString(), new FirestoreOnTransactionCallback() {
+                                @Override
+                                public void onSuccess() {
+                                    callback.onFailure();
+                                }
+
+                                @Override
+                                public void onFailure() {
+                                    callback.onFailure();
+
+                                }
+                            });
+
+                        }
+                    });
+
+                }
+
+            }
+
+            @Override
+            public void onFailure() {
+                callback.onFailure();
+            }
+        });
     }
 
 
