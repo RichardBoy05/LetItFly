@@ -13,7 +13,8 @@ import com.richardmeoli.letitfly.logic.database.local.PositionsTable;
 import com.richardmeoli.letitfly.logic.database.local.InvalidInputException;
 import com.richardmeoli.letitfly.logic.database.online.Firestore;
 import com.richardmeoli.letitfly.logic.database.online.FirestoreAttributes;
-import com.richardmeoli.letitfly.logic.database.online.FirestoreOnTransactionCallback;
+import com.richardmeoli.letitfly.logic.database.online.FirestoreError;
+import com.richardmeoli.letitfly.logic.database.online.callbacks.FirestoreOnTransactionCallback;
 
 public class Routine implements RoutinesTable, PositionsTable, FirestoreAttributes { // abstraction of the concept of Routine
 
@@ -122,7 +123,8 @@ public class Routine implements RoutinesTable, PositionsTable, FirestoreAttribut
         ArrayList<Object> values = new ArrayList<>(Arrays.asList(name, author, color, uuid.toString(), time, isPublic, notes));
 
         if (!db.insertRecord(ROUTINES_TABLE, values)) {
-            callback.onFailure();
+            callback.onFailure(FirestoreError.LOCAL_DB_ERROR);
+            return;
         }
 
         for (Position pos : positions) {
@@ -132,7 +134,8 @@ public class Routine implements RoutinesTable, PositionsTable, FirestoreAttribut
 
             if (!result) {
                 db.deleteRecords(ROUTINES_TABLE, R_COLUMN_NAME, name);
-                callback.onFailure();
+                callback.onFailure(FirestoreError.LOCAL_DB_ERROR);
+                return;
             }
         }
 
@@ -145,8 +148,8 @@ public class Routine implements RoutinesTable, PositionsTable, FirestoreAttribut
                 }
 
                 @Override
-                public void onFailure() {
-                    callback.onFailure();
+                public void onFailure(FirestoreError error) {
+                    callback.onFailure(error);
 
                 }
 
@@ -164,9 +167,9 @@ public class Routine implements RoutinesTable, PositionsTable, FirestoreAttribut
             @Override
             public void onSuccess() {
 
-                for (int i = 1; i < positions.size(); i++) {
+                for (int i = 0; i < positions.size(); i++) {
 
-                    fs.storeDocument(POSITIONS_COLLECTION, uuid + " (" + i + ")", new Object[]{positions.get(i).getXPos(), positions.get(i).getYPos(),
+                    fs.storeDocument(POSITIONS_COLLECTION, uuid + " (" + (int)(i + 1) + ")", new Object[]{positions.get(i).getXPos(), positions.get(i).getYPos(),
                             positions.get(i).getImgWidth(), positions.get(i).getImgHeight(), positions.get(i).getShotsCount(),
                             positions.get(i).getPointsPerShot(), positions.get(i).getPointsPerLastShot(), positions.get(i).getNotes()}, new FirestoreOnTransactionCallback() {
 
@@ -176,17 +179,17 @@ public class Routine implements RoutinesTable, PositionsTable, FirestoreAttribut
                         }
 
                         @Override
-                        public void onFailure() {
+                        public void onFailure(FirestoreError error) {
 
                             fs.deleteDocument(ROUTINES_COLLECTION, uuid.toString(), new FirestoreOnTransactionCallback() {
                                 @Override
                                 public void onSuccess() {
-                                    callback.onFailure();
+                                    callback.onFailure(error);
                                 }
 
                                 @Override
-                                public void onFailure() {
-                                    callback.onFailure();
+                                public void onFailure(FirestoreError error) {
+                                    callback.onFailure(error);
 
                                 }
                             });
@@ -199,8 +202,8 @@ public class Routine implements RoutinesTable, PositionsTable, FirestoreAttribut
             }
 
             @Override
-            public void onFailure() {
-                callback.onFailure();
+            public void onFailure(FirestoreError error) {
+                callback.onFailure(error);
             }
         });
     }

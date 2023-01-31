@@ -16,7 +16,8 @@ import com.richardmeoli.letitfly.logic.Routine;
 import com.richardmeoli.letitfly.logic.database.local.DatabaseAttributes;
 import com.richardmeoli.letitfly.logic.database.local.InvalidInputException;
 import com.richardmeoli.letitfly.logic.database.online.FirestoreAttributes;
-import com.richardmeoli.letitfly.logic.database.online.FirestoreOnTransactionCallback;
+import com.richardmeoli.letitfly.logic.database.online.FirestoreError;
+import com.richardmeoli.letitfly.logic.database.online.callbacks.FirestoreOnTransactionCallback;
 
 import java.util.ArrayList;
 import java.util.UUID;
@@ -59,7 +60,7 @@ public class RoutineFragment extends Fragment implements DatabaseAttributes, Fir
             positions.add(new Position(40, 70, 50, 50, 150, 3, 6, "ss nç°*°ç\"'''''"));
             positions.add(new Position(90, 60, 5, 50, 50, 10, null, null));
             positions.add(new Position(40, 80, 160, 50, 50, 9, 5, "kizzi"));
-            Routine routine = new Routine("Richard", "opttibile", "#778899", UUID.randomUUID(), 10, true, null, positions);
+            Routine routine = new Routine("Ricfhasdsdsasasasrd", "opttibile", "#778899", UUID.randomUUID(), 10, true, null, positions);
 
 
             routine.save(requireContext(), new FirestoreOnTransactionCallback() {
@@ -69,10 +70,29 @@ public class RoutineFragment extends Fragment implements DatabaseAttributes, Fir
                 }
 
                 @Override
-                public void onFailure() {
-                    Toast.makeText(requireContext(), "Puccodighel", Toast.LENGTH_SHORT).show();
+                public void onFailure(FirestoreError error) {
+                    Toast.makeText(requireContext(), error.toString(), Toast.LENGTH_SHORT).show();
                 }
             });
+
+//            Firestore fs = Firestore.getInstance();
+//
+//            ArrayList<String> fields = new ArrayList<>();
+//            fields.add("name");
+//
+//            fs.selectDocumentById(ROUTINES_COLLECTION, null, "2b127eb2-dadf-45ca-b309-89ff7ffc4a15", new FirestoreOnSingleQueryCallback() {
+//                @Override
+//                public void onSuccess(Map<String, Object> list) {
+//                    Toast.makeText(requireContext(), "Success", Toast.LENGTH_SHORT).show();
+//
+//                }
+//
+//                @Override
+//                public void onFailure(FirestoreError error) {
+//                    Toast.makeText(requireContext(), error.toString(), Toast.LENGTH_SHORT).show();
+//
+//                }
+//            });
 
 
         } catch (InvalidInputException e) {
