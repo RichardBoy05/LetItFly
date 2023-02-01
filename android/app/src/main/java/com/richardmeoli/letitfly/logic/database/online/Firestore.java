@@ -3,7 +3,6 @@ package com.richardmeoli.letitfly.logic.database.online;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
-
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -95,6 +94,133 @@ public class Firestore implements FirestoreContract {
                         callback.onFailure(FirestoreError.ERROR_WRITING_DOCUMENT);
                     });
         }
+
+    }
+
+    public void deleteDocumentById(String collection, @NonNull String id, final FirestoreOnTransactionCallback callback) {
+        // deletes a Document from the Firestore Database by its "id";
+
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        db.collection(collection).document(id)
+                .delete()
+                .addOnSuccessListener(aVoid -> {
+                    Log.d(TAG, "DocumentSnapshot with ID " + id + " successfully deleted!");
+                    callback.onSuccess();
+                })
+                .addOnFailureListener(e -> {
+                    Log.w(TAG, "Error deleting document", e);
+                    callback.onFailure(FirestoreError.ERROR_DELETING_DOCUMENT);
+                });
+
+
+    }
+
+    @Override
+    public void deleteDocumentsByField(String collection, String whereField, Object value, FirestoreOnTransactionCallback callback) {
+        // deletes a Document from the Firestore Database
+        // where the field 'whereField' (pass null to delete all the documents)
+        // matches the given parameter 'value'.
+
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        Query query;
+
+        if (whereField == null) {
+            query = db.collection(collection);
+        } else {
+            query = db.collection(collection).whereEqualTo(whereField, value);
+        }
+
+        query.get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        for (QueryDocumentSnapshot document : task.getResult()) {
+                            document.getReference().delete();
+                            Log.d(TAG, "DocumentSnapshot with ID " + document.getId() + " successfully deleted!");
+                        }
+
+                        callback.onSuccess();
+                    } else {
+                        Log.d("TAG", FirestoreError.ERROR_DELETING_DOCUMENTS.toString(), task.getException());
+                        callback.onFailure(FirestoreError.ERROR_DELETING_DOCUMENTS);
+                    }
+                });
+
+    }
+
+    @Override
+    public void updateDocumentById(String collection, String[] fieldsToUpdate, Object[] values, String id, FirestoreOnTransactionCallback callback) {
+        // updates a Document of the Firestore Database with the new field-value pairs, by its 'id' ;
+
+        if (fieldsToUpdate.length != values.length) { // keys and value must have the same length
+            callback.onFailure(FirestoreError.KEYS_VALUES_MISMATCH);
+            return;
+        }
+
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        Map<String, Object> updates = new HashMap<>();
+        int index = 0;
+
+        for (String field : fieldsToUpdate) {
+            updates.put(field, values[index]);
+            index++;
+        }
+
+        db.collection(collection).document(id)
+                .update(updates)
+                .addOnSuccessListener(aVoid -> {
+                    Log.d(TAG, "DocumentSnapshot successfully updated!");
+                    callback.onSuccess();
+                })
+                .addOnFailureListener(e -> {
+                    Log.w(TAG, FirestoreError.ERROR_UPDATING_DOCUMENT.toString(), e);
+                    callback.onFailure(FirestoreError.ERROR_UPDATING_DOCUMENT);
+                });
+
+    }
+
+    @Override
+    public void updateDocumentsByField(String collection, String[] fieldsToUpdate, Object[] values, String whereField, Object value, FirestoreOnTransactionCallback callback) {
+        // updates a Document of the Firestore Database with the new field-value pairs,
+        // where the field 'whereField' (pass null to delete all the documents)
+        // matches the given parameter 'value'.
+
+        if (fieldsToUpdate.length != values.length) { // keys and value must have the same length
+            callback.onFailure(FirestoreError.KEYS_VALUES_MISMATCH);
+            return;
+        }
+
+        Map<String, Object> updates = new HashMap<>();
+        int index = 0;
+
+        for (String field : fieldsToUpdate) {
+            updates.put(field, values[index]);
+            index++;
+        }
+
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        Query query;
+
+        if (whereField == null) {
+            query = db.collection(collection);
+        } else {
+            query = db.collection(collection).whereEqualTo(whereField, value);
+        }
+
+        query.get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        for (DocumentSnapshot document : task.getResult()) {
+                            document.getReference().update(updates);
+                            Log.d(TAG, "DocumentSnapshot with ID " + document.getId() + " successfully updated!");
+                        }
+
+                        callback.onSuccess();
+                    } else {
+                        Log.d("TAG", FirestoreError.ERROR_UPDATING_DOCUMENTS.toString(), task.getException());
+                        callback.onFailure(FirestoreError.ERROR_UPDATING_DOCUMENTS);
+                    }
+                });
 
     }
 
@@ -218,24 +344,5 @@ public class Firestore implements FirestoreContract {
                 });
     }
 
-
-    public void deleteDocument(String collection, @NonNull String id, final FirestoreOnTransactionCallback callback) {
-        // deletes a Document from the Firestore Database by its "id";
-
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-
-        db.collection(collection).document(id)
-                .delete()
-                .addOnSuccessListener(aVoid -> {
-                    Log.d(TAG, "DocumentSnapshot with ID " + id + " successfully deleted!");
-                    callback.onSuccess();
-                })
-                .addOnFailureListener(e -> {
-                    Log.w(TAG, "Error deleting document", e);
-                    callback.onFailure(FirestoreError.ERROR_DELETING_DOCUMENT);
-                });
-
-
-    }
 
 }

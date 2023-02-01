@@ -181,7 +181,7 @@ public class Routine implements RoutinesTable, PositionsTable, FirestoreAttribut
                         @Override
                         public void onFailure(FirestoreError error) {
 
-                            fs.deleteDocument(ROUTINES_COLLECTION, uuid.toString(), new FirestoreOnTransactionCallback() {
+                            fs.deleteDocumentById(ROUTINES_COLLECTION, uuid.toString(), new FirestoreOnTransactionCallback() {
                                 @Override
                                 public void onSuccess() {
                                     callback.onFailure(error);
