@@ -8,6 +8,7 @@ public enum FirestoreError {
 
     NO_SUCH_COLLECTION("NO_SUCH_COLLECTION", "This collection does not exist!"),
     NO_SUCH_DOCUMENT("NO_SUCH_DOCUMENT", "This document does not exist!"),
+    DOCUMENT_ALREADY_EXISTS("DOCUMENT_ALREADY_EXISTS", "This document already exists!"),
     KEYS_VALUES_MISMATCH("KEYS_VALUES_MISMATCH", "The desired values do not match the keys!"),
     ERROR_WRITING_DOCUMENT("ERROR_WRITING_DOCUMENT", "An unexpected error has occured while writing the document to the Firestore Database!"),
     ERROR_DELETING_DOCUMENT("ERROR_DELETING_DOCUMENT", "An unexpected error has occured while deleting the document from the Firestore Database!"),

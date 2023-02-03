@@ -3,10 +3,12 @@ package com.richardmeoli.letitfly.logic.database.online;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.richardmeoli.letitfly.logic.database.online.callbacks.FirestoreDocumentExistsCallback;
 import com.richardmeoli.letitfly.logic.database.online.callbacks.FirestoreOnTransactionCallback;
 import com.richardmeoli.letitfly.logic.database.online.callbacks.FirestoreOnSingleQueryCallback;
 import com.richardmeoli.letitfly.logic.database.online.callbacks.FirestoreOnMultipleQueryCallback;
@@ -33,9 +35,9 @@ public class Firestore implements FirestoreContract {
 
 
     @Override
-    public void storeDocument(String collection, String id, Object[] values, final FirestoreOnTransactionCallback callback) {
-        // stores a Document to the Firestore Database with the specified "id" and values;
-        // pass a null id to make it generate directly by Firestore
+    public void storeDocument(@NonNull String collection, String id, Object[] values, final FirestoreOnTransactionCallback callback) {
+        // Store a document to the Firestore database with the specified "id" and values.
+        // Pass a null value for the "id" to allow Firestore to automatically generate an ID.
 
         String[] keys;
 
@@ -59,68 +61,107 @@ public class Firestore implements FirestoreContract {
             return;
         }
 
-        Map<String, Object> document = new HashMap<>();
-        int index = 0;
 
-        for (String key : keys) {
-            document.put(key, values[index]);
-            index++;
-        }
+        checkIfDocumentExists(collection, id, exists -> {
 
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
+            if (exists) { // checks if document already exists
+                callback.onFailure(FirestoreError.DOCUMENT_ALREADY_EXISTS);
+                return;
+            }
 
-        if (id == null) { // uploads Document with Firestore generated ID
+            FirebaseFirestore db = FirebaseFirestore.getInstance();
+            Map<String, Object> document = new HashMap<>();
+            int index = 0;
 
-            db.collection(collection).add(document)
-                    .addOnSuccessListener(documentReference -> {
-                        Log.d(TAG, "DocumentSnapshot added with ID: " + documentReference.getId());
-                        callback.onSuccess();
-                    })
-                    .addOnFailureListener(e -> {
-                        Log.w(TAG, FirestoreError.ERROR_WRITING_DOCUMENT.toString(), e);
-                        callback.onFailure(FirestoreError.ERROR_WRITING_DOCUMENT);
-                    });
+            for (String key : keys) {
+                document.put(key, values[index]);
+                index++;
+            }
 
-        } else { // uploads Document with given id
+            if (id == null) { // uploads Document with Firestore generated ID
 
-            db.collection(collection).document(id)
-                    .set(document)
-                    .addOnSuccessListener(aVoid -> {
-                        Log.d(TAG, "DocumentSnapshot added with ID: " + id);
-                        callback.onSuccess();
-                    })
-                    .addOnFailureListener(e -> {
-                        Log.w(TAG, FirestoreError.ERROR_WRITING_DOCUMENT.toString(), e);
-                        callback.onFailure(FirestoreError.ERROR_WRITING_DOCUMENT);
-                    });
-        }
+                db.collection(collection).add(document)
+                        .addOnSuccessListener(documentReference -> {
+                            Log.d(TAG, "DocumentSnapshot added with ID: " + documentReference.getId());
+                            callback.onSuccess();
+                        })
+                        .addOnFailureListener(e -> {
+                            Log.w(TAG, FirestoreError.ERROR_WRITING_DOCUMENT.toString(), e);
+                            callback.onFailure(FirestoreError.ERROR_WRITING_DOCUMENT);
+                        });
 
-    }
+            } else { // uploads Document with given id
 
-    public void deleteDocumentById(String collection, @NonNull String id, final FirestoreOnTransactionCallback callback) {
-        // deletes a Document from the Firestore Database by its "id";
-
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-
-        db.collection(collection).document(id)
-                .delete()
-                .addOnSuccessListener(aVoid -> {
-                    Log.d(TAG, "DocumentSnapshot with ID " + id + " successfully deleted!");
-                    callback.onSuccess();
-                })
-                .addOnFailureListener(e -> {
-                    Log.w(TAG, "Error deleting document", e);
-                    callback.onFailure(FirestoreError.ERROR_DELETING_DOCUMENT);
-                });
+                db.collection(collection).document(id)
+                        .set(document)
+                        .addOnSuccessListener(aVoid -> {
+                            Log.d(TAG, "DocumentSnapshot added with ID: " + id);
+                            callback.onSuccess();
+                        })
+                        .addOnFailureListener(e -> {
+                            Log.w(TAG, FirestoreError.ERROR_WRITING_DOCUMENT.toString(), e);
+                            callback.onFailure(FirestoreError.ERROR_WRITING_DOCUMENT);
+                        });
+            }
+        });
 
 
     }
 
     @Override
-    public void deleteDocumentsByField(String collection, String whereField, Object value, FirestoreOnTransactionCallback callback) {
-        // deletes a Document from the Firestore Database
-        // where the field 'whereField' (pass null to delete all the documents)
-        // matches the given parameter 'value'.
+    public void checkIfDocumentExists(@NonNull String collection, String id, FirestoreDocumentExistsCallback callback) {
+        // Determine if a document with the given 'id' exists in the specified 'collection' in Firestore.
+
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        if (id == null) { // if 'id' is null, Firestore will automatically generate a unique identifier for it.
+            callback.onDocumentExists(false);
+            return;
+        }
+
+        db.collection(collection).document(id)
+                .get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        DocumentSnapshot document = task.getResult();
+
+                        callback.onDocumentExists(document.exists());
+                    }
+                });
+    }
+
+    public void deleteDocumentById(@NonNull String collection, @NonNull String id, final FirestoreOnTransactionCallback callback) {
+        // Remove a document from the Firestore database using its unique "id".
+
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        checkIfDocumentExists(collection, id, exists -> {
+            if (!exists) {
+                callback.onFailure(FirestoreError.NO_SUCH_DOCUMENT);
+                return;
+            }
+
+            db.collection(collection).document(id)
+                    .delete()
+                    .addOnSuccessListener(aVoid -> {
+                        Log.d(TAG, "DocumentSnapshot with ID " + id + " successfully deleted!");
+                        callback.onSuccess();
+                    })
+                    .addOnFailureListener(e -> {
+                        Log.w(TAG, "Error deleting document", e);
+                        callback.onFailure(FirestoreError.ERROR_DELETING_DOCUMENT);
+                    });
+
+        });
+
+
+    }
+
+    @Override
+    public void deleteDocumentsByField(@NonNull String collection, String whereField, Object value, FirestoreOnTransactionCallback callback) {
+        // Delete documents from the Firestore database where the value of field 'whereField'
+        // matches the given parameter 'value'. Pass a null value for 'whereField' to delete all documents.
+
 
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         Query query;
@@ -135,8 +176,18 @@ public class Firestore implements FirestoreContract {
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
                         for (QueryDocumentSnapshot document : task.getResult()) {
-                            document.getReference().delete();
-                            Log.d(TAG, "DocumentSnapshot with ID " + document.getId() + " successfully deleted!");
+
+                            document.getReference().delete()
+
+                                    .addOnSuccessListener(aVoid -> {
+                                        Log.d(TAG, "DocumentSnapshot with ID " + document.getId() + " successfully deleted!");
+                                        callback.onSuccess();
+                                    })
+                                    .addOnFailureListener(e -> {
+                                        Log.w(TAG, "Error deleting document", e);
+                                        callback.onFailure(FirestoreError.ERROR_DELETING_DOCUMENT);
+                                    });
+
                         }
 
                         callback.onSuccess();
@@ -149,8 +200,8 @@ public class Firestore implements FirestoreContract {
     }
 
     @Override
-    public void updateDocumentById(String collection, String[] fieldsToUpdate, Object[] values, String id, FirestoreOnTransactionCallback callback) {
-        // updates a Document of the Firestore Database with the new field-value pairs, by its 'id' ;
+    public void updateDocumentById(@NonNull String collection, String[] fieldsToUpdate, Object[] values, String id, FirestoreOnTransactionCallback callback) {
+        // Update a document in the Firestore database with new field-value pairs using its unique 'id'.
 
         if (fieldsToUpdate.length != values.length) { // keys and value must have the same length
             callback.onFailure(FirestoreError.KEYS_VALUES_MISMATCH);
@@ -180,10 +231,11 @@ public class Firestore implements FirestoreContract {
     }
 
     @Override
-    public void updateDocumentsByField(String collection, String[] fieldsToUpdate, Object[] values, String whereField, Object value, FirestoreOnTransactionCallback callback) {
-        // updates a Document of the Firestore Database with the new field-value pairs,
-        // where the field 'whereField' (pass null to delete all the documents)
-        // matches the given parameter 'value'.
+    public void updateDocumentsByField(@NonNull String collection, String[] fieldsToUpdate, Object[] values, String whereField, Object value, FirestoreOnTransactionCallback callback) {
+        // Modify documents in the Firestore database by updating their field-value pairs,
+        // where the value of field 'whereField' matches the given parameter 'value'.
+        // Pass a null value for 'whereField' to update all documents.
+
 
         if (fieldsToUpdate.length != values.length) { // keys and value must have the same length
             callback.onFailure(FirestoreError.KEYS_VALUES_MISMATCH);
@@ -225,13 +277,13 @@ public class Firestore implements FirestoreContract {
     }
 
     @Override
-    public void selectDocumentById(String collection, ArrayList<String> fieldsToSelect, @NonNull String id, final FirestoreOnSingleQueryCallback callback) {
-        // selects the values of the selected fields 'fieldsToSelect'
-        // (pass null to select all fields)
-        // from the given 'collection', where the id matches the given parameter 'id'.
-        // IMPORTANT: if one of the elements of 'fieldsToSelect' is not an actual field of
-        // the 'collection', it just won't be added in the resulting hashMap, but it won't
-        // produce any errors.
+    public void selectDocumentById(@NonNull String collection, ArrayList<String> fieldsToSelect, @NonNull String id, final FirestoreOnSingleQueryCallback callback) {
+        // Retrieve selected values of fields 'fieldsToSelect' from the specified 'collection',
+        // where the 'id' matches the given parameter. Pass a null value for 'fieldsToSelect'
+        // to select all fields. Note that if one of the elements of 'fieldsToSelect' is not
+        // an actual field in the collection, it will not be included in the resulting hashMap
+        // without generating any errors.
+
 
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
@@ -286,14 +338,14 @@ public class Firestore implements FirestoreContract {
     }
 
     @Override
-    public void selectDocumentsByField(String collection, ArrayList<String> fieldsToSelect, String whereField, Object value, final FirestoreOnMultipleQueryCallback callback) {
-        // selects the values of the selected fields 'fieldsToSelect'
-        // (pass null to select all fields)
-        // from the given 'collection', where the field 'whereField' (pass null to select all the documents)
-        // matches the given parameter 'value'.
-        // IMPORTANT: if one of the elements of 'fieldsToSelect' is not an actual field of
-        // the 'collection', it just won't be added in the resulting hashMap, but it won't
-        // produce any errors.
+    public void selectDocumentsByField(@NonNull String collection, ArrayList<String> fieldsToSelect, String whereField, Object value, final FirestoreOnMultipleQueryCallback callback) {
+        // Retrieve selected values of fields 'fieldsToSelect' from the specified 'collection',
+        // where the value of field 'whereField' matches the given parameter 'value'.
+        // Pass a null value for 'fieldsToSelect' to select all fields, or for 'whereField'
+        // to select from all documents. Note that if one of the elements of 'fieldsToSelect'
+        // is not an actual field in the collection, it will not be included in the resulting hashMap
+        // without generating any errors.
+
 
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         Query query;
