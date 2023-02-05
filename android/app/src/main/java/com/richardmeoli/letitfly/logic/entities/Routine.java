@@ -1,4 +1,4 @@
-package com.richardmeoli.letitfly.logic;
+package com.richardmeoli.letitfly.logic.entities;
 
 import android.content.Context;
 import androidx.annotation.NonNull;
@@ -11,9 +11,9 @@ import com.richardmeoli.letitfly.logic.database.local.Database;
 import com.richardmeoli.letitfly.logic.database.local.RoutinesTable;
 import com.richardmeoli.letitfly.logic.database.local.PositionsTable;
 import com.richardmeoli.letitfly.logic.database.local.InvalidInputException;
-import com.richardmeoli.letitfly.logic.database.online.Firestore;
-import com.richardmeoli.letitfly.logic.database.online.FirestoreAttributes;
-import com.richardmeoli.letitfly.logic.database.online.FirestoreError;
+import com.richardmeoli.letitfly.logic.database.online.firestore.Firestore;
+import com.richardmeoli.letitfly.logic.database.online.firestore.FirestoreAttributes;
+import com.richardmeoli.letitfly.logic.database.online.firestore.FirestoreError;
 import com.richardmeoli.letitfly.logic.database.online.callbacks.FirestoreOnTransactionCallback;
 
 public class Routine implements RoutinesTable, PositionsTable, FirestoreAttributes { // abstraction of the concept of Routine
@@ -163,13 +163,13 @@ public class Routine implements RoutinesTable, PositionsTable, FirestoreAttribut
 
         Firestore fs = Firestore.getInstance();
 
-        fs.storeDocument(ROUTINES_COLLECTION, uuid.toString(), new Object[]{name, author, color, time, notes}, new FirestoreOnTransactionCallback() {
+        fs.addDocument(ROUTINES_COLLECTION, uuid.toString(), new Object[]{name, author, color, time, notes}, new FirestoreOnTransactionCallback() {
             @Override
             public void onSuccess() {
 
                 for (int i = 0; i < positions.size(); i++) {
 
-                    fs.storeDocument(POSITIONS_COLLECTION, uuid + " (" + (int)(i + 1) + ")", new Object[]{positions.get(i).getXPos(), positions.get(i).getYPos(),
+                    fs.addDocument(POSITIONS_COLLECTION, uuid + " (" + (int)(i + 1) + ")", new Object[]{positions.get(i).getXPos(), positions.get(i).getYPos(),
                             positions.get(i).getImgWidth(), positions.get(i).getImgHeight(), positions.get(i).getShotsCount(),
                             positions.get(i).getPointsPerShot(), positions.get(i).getPointsPerLastShot(), positions.get(i).getNotes()}, new FirestoreOnTransactionCallback() {
 
@@ -181,7 +181,7 @@ public class Routine implements RoutinesTable, PositionsTable, FirestoreAttribut
                         @Override
                         public void onFailure(FirestoreError error) {
 
-                            fs.deleteDocumentById(ROUTINES_COLLECTION, uuid.toString(), new FirestoreOnTransactionCallback() {
+                            fs.deleteDocument(ROUTINES_COLLECTION, uuid.toString(), new FirestoreOnTransactionCallback() {
                                 @Override
                                 public void onSuccess() {
                                     callback.onFailure(error);

@@ -1,12 +1,12 @@
 package com.richardmeoli.letitfly.logic.database.online.callbacks;
 
-import com.richardmeoli.letitfly.logic.database.online.FirestoreError;
+import com.richardmeoli.letitfly.logic.database.online.firestore.FirestoreError;
 
-import java.util.List;
 import java.util.Map;
+import java.util.List;
 
 public interface FirestoreOnMultipleQueryCallback {
-    // interface to manage Firestore multiple queries outcome
+    // Interface for managing the outcome of multiple queries in Firestore.
 
     void onSuccess(List<Map<String, Object>> list);
     void onFailure(FirestoreError error);

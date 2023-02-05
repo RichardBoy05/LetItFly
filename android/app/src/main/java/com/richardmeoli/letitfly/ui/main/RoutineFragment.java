@@ -10,20 +10,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import com.google.firebase.firestore.FirebaseFirestore;
 import com.richardmeoli.letitfly.R;
-import com.richardmeoli.letitfly.logic.Position;
-import com.richardmeoli.letitfly.logic.Routine;
 import com.richardmeoli.letitfly.logic.database.local.DatabaseAttributes;
-import com.richardmeoli.letitfly.logic.database.local.InvalidInputException;
-import com.richardmeoli.letitfly.logic.database.online.Firestore;
-import com.richardmeoli.letitfly.logic.database.online.FirestoreAttributes;
-import com.richardmeoli.letitfly.logic.database.online.FirestoreError;
-import com.richardmeoli.letitfly.logic.database.online.callbacks.FirestoreDocumentExistsCallback;
-import com.richardmeoli.letitfly.logic.database.online.callbacks.FirestoreOnTransactionCallback;
-
-import java.util.ArrayList;
-import java.util.UUID;
+import com.richardmeoli.letitfly.logic.database.online.firestore.FirestoreAttributes;
 
 
 public class RoutineFragment extends Fragment implements DatabaseAttributes, FirestoreAttributes {

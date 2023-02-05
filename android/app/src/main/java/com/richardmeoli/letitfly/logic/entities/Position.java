@@ -1,4 +1,4 @@
-package com.richardmeoli.letitfly.logic;
+package com.richardmeoli.letitfly.logic.entities;
 
 import androidx.annotation.NonNull;
 

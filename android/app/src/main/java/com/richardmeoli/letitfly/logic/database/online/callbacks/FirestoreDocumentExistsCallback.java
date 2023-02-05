@@ -1,7 +1,7 @@
 package com.richardmeoli.letitfly.logic.database.online.callbacks;
 
 public interface FirestoreDocumentExistsCallback {
-    // interface to check if a document exists in Firestore
+    // Interface for checking the existence of a document in Firestore.
 
     void onDocumentExists (boolean exists);
 }
