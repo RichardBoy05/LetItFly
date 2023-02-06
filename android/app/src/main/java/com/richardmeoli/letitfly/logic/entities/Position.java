@@ -2,8 +2,8 @@ package com.richardmeoli.letitfly.logic.entities;
 
 import androidx.annotation.NonNull;
 
-import com.richardmeoli.letitfly.logic.database.local.PositionsTable;
-import com.richardmeoli.letitfly.logic.database.local.InvalidInputException;
+import com.richardmeoli.letitfly.logic.database.local.tables.PositionsTable;
+import com.richardmeoli.letitfly.logic.database.local.sqlite.InvalidInputException;
 
 public class Position implements PositionsTable { // abstraction of the concept of Position
 

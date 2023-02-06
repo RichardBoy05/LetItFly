@@ -11,7 +11,8 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.richardmeoli.letitfly.R;
-import com.richardmeoli.letitfly.logic.database.local.DatabaseAttributes;
+import com.richardmeoli.letitfly.logic.database.local.sqlite.Database;
+import com.richardmeoli.letitfly.logic.database.local.sqlite.DatabaseAttributes;
 import com.richardmeoli.letitfly.logic.database.online.firestore.FirestoreAttributes;
 
 
@@ -92,6 +93,9 @@ public class RoutineFragment extends Fragment implements DatabaseAttributes, Fir
 //            e.printStackTrace();
 //        }
 
+
+            Database db = Database.getInstance(requireContext());
+            boolean result = db.deleteRecords("sas", "sasa", "sas");
 
     });
 

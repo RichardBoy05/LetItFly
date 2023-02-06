@@ -1,10 +1,10 @@
-package com.richardmeoli.letitfly.logic.database.local;
+package com.richardmeoli.letitfly.logic.database.local.tables;
 
 public interface PositionsTable {
 
     String POSITIONS_TABLE = "positions";
 
-    // columns
+    //--------------- Columns ---------------//
 
     String P_COLUMN_ID = "id";
     String P_COLUMN_ROUTINE = "routine";
@@ -22,7 +22,7 @@ public interface PositionsTable {
     String[] P_COLUMNS_ID_INCLUDED = {P_COLUMN_ID, P_COLUMN_ROUTINE, P_COLUMN_X_POS, P_COLUMN_Y_POS,
             P_COLUMN_IMG_WIDTH, P_COLUMN_IMG_HEIGHT, P_COLUMN_SHOTS, P_COLUMN_PTS_PER_SHOT, P_COLUMN_PTS_PER_LAST_SHOT, P_COLUMN_NOTES};
 
-    // values
+    //--------------- Values ----------------//
 
     int P_SHOTS_COUNT_MAX_VALUE = 10000;
     int P_POINTS_PER_SHOT_MAX_VALUE = 10;

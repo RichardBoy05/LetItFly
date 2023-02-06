@@ -1,10 +1,10 @@
-package com.richardmeoli.letitfly.logic.database.local;
+package com.richardmeoli.letitfly.logic.database.local.tables;
 
-public interface RoutinesTable{
+public interface RoutinesTable {
 
     String ROUTINES_TABLE = "routines";
 
-    // columns
+    //--------------- Columns ---------------//
 
     String R_COLUMN_ID = "id";
     String R_COLUMN_NAME = "name";
@@ -20,7 +20,7 @@ public interface RoutinesTable{
     String[] R_COLUMNS_ID_INCLUDED = {R_COLUMN_ID, R_COLUMN_NAME, R_COLUMN_AUTHOR,
             R_COLUMN_COLOR, R_COLUMN_UUID, R_COLUMN_TIME, R_COLUMN_IS_PUBLIC, R_COLUMN_NOTES};
 
-    // values
+    //--------------- Values ----------------//
 
     int R_NAME_MIN_LENGTH = 3;
     int R_NAME_MAX_LENGTH = 20;

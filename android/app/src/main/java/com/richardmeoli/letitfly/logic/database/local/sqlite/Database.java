@@ -1,24 +1,28 @@
-package com.richardmeoli.letitfly.logic.database.local;
+package com.richardmeoli.letitfly.logic.database.local.sqlite;
 
 import android.content.Context;
-import android.database.Cursor;
 import android.content.ContentValues;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
+
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import java.util.List;
 import java.util.Arrays;
 import java.util.ArrayList;
 
 
 public class Database extends SQLiteOpenHelper implements DatabaseContract {
-    /*
 
-     * - Helper class that handles all the databases methods
-     * - Singleton Pattern implementation to prevent the class from being instatiated more than once
-     *
+    /*
+     * Helper class that handles all Sqlite database operations.
+     * Implements the Singleton Pattern to ensure that the class is instantiated only once.
      */
+
 
     private static Database instance;
     private static SQLiteDatabase dbHelper;
@@ -43,7 +47,7 @@ public class Database extends SQLiteOpenHelper implements DatabaseContract {
             "\t FOREIGN KEY (" + S_COLUMN_ROUTINE + ") REFERENCES " + ROUTINES_TABLE + "(" + R_COLUMN_NAME + ") ON UPDATE CASCADE ON DELETE CASCADE" +
             ");";
 
-    private static final String P_CREATION_STATEMENT =  "CREATE TABLE IF NOT EXISTS '" + POSITIONS_TABLE + "' (\n" +
+    private static final String P_CREATION_STATEMENT = "CREATE TABLE IF NOT EXISTS '" + POSITIONS_TABLE + "' (\n" +
             "\t'" + P_COLUMN_ID + "' INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,\n" +
             "\t'" + P_COLUMN_ROUTINE + "' VARCHAR(" + R_NAME_MAX_LENGTH + ") NOT NULL,\n" +
             "\t'" + P_COLUMN_X_POS + "' MEDIUMINT NOT NULL,\n" +
@@ -93,19 +97,20 @@ public class Database extends SQLiteOpenHelper implements DatabaseContract {
 
     // database methods
 
-    private ContentValues buildContentValues(String[] columns, ArrayList<Object> values) {
+    private ContentValues buildContentValues(@NonNull String[] columns, @NonNull Object[] values) {
+        // Build a `ContentValues` object from the given column names and values.
 
         ContentValues record = new ContentValues(columns.length);
 
         int index = 0;
         for (String key : columns) {
 
-            if (values.get(index) instanceof Integer) {
-                record.put(key, (int) (values.get(index)));
-            } else if (values.get(index) instanceof Boolean) {
-                record.put(key, (boolean) (values.get(index)));
-            } else if (values.get(index) instanceof String) {
-                record.put(key, (String) (values.get(index)));
+            if (values[index] instanceof Integer) {
+                record.put(key, (int) (values[index]));
+            } else if (values[index] instanceof Boolean) {
+                record.put(key, (boolean) (values[index]));
+            } else if (values[index] instanceof String) {
+                record.put(key, (String) (values[index]));
             } else {
                 record.putNull(key);
             }
@@ -117,46 +122,48 @@ public class Database extends SQLiteOpenHelper implements DatabaseContract {
     }
 
     @Override
-    public boolean insertRecord(String table, ArrayList<Object> values) {
-        // inserts a new record (row) into a specific 'table' of the database
+    public boolean insertRecord(@NonNull String table, @NonNull Object[] values) {
+        // Insert a new record (row) into a specified table
+        // of the database based on the given 'values'.
 
         String[] columns;
 
-        switch (table) { // check if the sizes match the columns
+        switch (table) { // columns and values must have the same length
 
             case ROUTINES_TABLE:
-                if (values.size() != R_COLUMNS.length) {
+                if (values.length != R_COLUMNS.length) {
                     return false;
                 }
                 columns = R_COLUMNS;
                 break;
 
             case STATS_TABLE:
-                if (values.size() != S_COLUMNS.length) {
+                if (values.length != S_COLUMNS.length) {
                     return false;
                 }
                 columns = S_COLUMNS;
                 break;
 
             case POSITIONS_TABLE:
-                if (values.size() != P_COLUMNS.length) {
+                if (values.length != P_COLUMNS.length) {
                     return false;
                 }
                 columns = P_COLUMNS;
                 break;
 
-            default:
+            default: // non-existent table
                 return false;
         }
 
         ContentValues record = buildContentValues(columns, values);
 
         try {
+            return dbHelper.insert(table, null, record) != -1;
+            // returns true if the insert operation was successful, false otherwise.
 
-            return getDbHelper().insert(table, null, record) != -1;
 
         } catch (SQLiteException e) {
-            e.printStackTrace();
+            Log.w(TAG, e.toString(), e);
             return false;
         }
     }
@@ -172,7 +179,8 @@ public class Database extends SQLiteOpenHelper implements DatabaseContract {
 
         try {
 
-            return getDbHelper().delete(table, whereClause, valuesClause) != 0;
+            return dbHelper.delete(table, whereClause, valuesClause) != 0;
+            // returns true if the insert operation was successful, false otherwise.
 
         } catch (SQLiteException e) {
             e.printStackTrace();
@@ -181,15 +189,16 @@ public class Database extends SQLiteOpenHelper implements DatabaseContract {
     }
 
     @Override
-    public boolean updateRecords(String table, String whereColumn, Object value, String[] columnsToUpdate, ArrayList<Object> newValues) {
+    public boolean updateRecords(String table, String whereColumn, Object value, String[] columnsToUpdate, Object[] newValues) {
         // updates the records (row) where the column 'whereColumn'
         // matches the given parameter 'value',
         // (pass null to update all rows)
         // replacing the old values with the 'newValues'
         // for the matching 'columnsToUpdate'
 
-        if (columnsToUpdate.length != newValues.size() ||
-                Arrays.asList(columnsToUpdate).contains(R_S_P_COLUMN_ID)) {
+        if (columnsToUpdate.length != newValues.length || Arrays.asList(columnsToUpdate).contains(R_S_P_COLUMN_ID)) {
+            // columns and values must have the same length
+
             return false;
         }
 
@@ -198,7 +207,7 @@ public class Database extends SQLiteOpenHelper implements DatabaseContract {
 
         try {
 
-            return getDbHelper().update(table,
+            return dbHelper.update(table,
                     buildContentValues(columnsToUpdate, newValues),
                     whereClause, valuesClause) != 0;
 
@@ -209,12 +218,12 @@ public class Database extends SQLiteOpenHelper implements DatabaseContract {
     }
 
     @Override
-    public ArrayList<ArrayList<Object>> selectRecords(String table,
-                                                      String[] columns,
-                                                      String whereColumn,
-                                                      Object value,
-                                                      String sortingColumn,
-                                                      Boolean ascendent) {
+    public List<List<Object>> selectRecords(String table,
+                                            String[] columns,
+                                            String whereColumn,
+                                            Object value,
+                                            String sortingColumn,
+                                            Boolean ascendent) {
         // selects the values of the selected 'columns' (pass null to select from all columns)
         // of the given 'table', where the column 'whereColumn' matches the given
         // parameter 'value' (pass null to select all rows).
@@ -231,7 +240,7 @@ public class Database extends SQLiteOpenHelper implements DatabaseContract {
             sortOrder = sortingColumn + (ascendent ? " ASC" : " DESC");
         }
 
-        try (Cursor cursor = getDbHelper().query(
+        try (Cursor cursor = dbHelper.query(
                 table,
                 columns,
                 whereClause,
@@ -240,11 +249,11 @@ public class Database extends SQLiteOpenHelper implements DatabaseContract {
                 null,
                 sortOrder)) {
 
-            ArrayList<ArrayList<Object>> result = new ArrayList<>();
+            List<List<Object>> result = new ArrayList<>();
 
             if (columns == null) {
 
-                switch (table) { // check if the sizes match the columns
+                switch (table) { // columns and values must have the same length
 
                     case ROUTINES_TABLE:
                         columns = R_COLUMNS_ID_INCLUDED;
@@ -258,14 +267,14 @@ public class Database extends SQLiteOpenHelper implements DatabaseContract {
                         columns = P_COLUMNS_ID_INCLUDED;
                         break;
 
-                    default:
+                    default: // non-existent table
                         return null;
                 }
             }
 
             while (cursor.moveToNext()) {
 
-                ArrayList<Object> item = new ArrayList<>();
+                List<Object> item = new ArrayList<>();
                 for (String i : columns) {
 
                     switch (cursor.getType(cursor.getColumnIndexOrThrow(i))) {
@@ -301,7 +310,4 @@ public class Database extends SQLiteOpenHelper implements DatabaseContract {
         }
     }
 
-    public SQLiteDatabase getDbHelper() {
-        return dbHelper;
-    }
 }

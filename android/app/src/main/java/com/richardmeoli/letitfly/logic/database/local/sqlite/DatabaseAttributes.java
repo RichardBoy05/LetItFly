@@ -1,8 +1,8 @@
-package com.richardmeoli.letitfly.logic.database.local;
+package com.richardmeoli.letitfly.logic.database.local.sqlite;
 
 public interface DatabaseAttributes {
 
-    // general attributes
+    // Database general attributes
 
     String DATABASE_NAME = "letitfly.db";
     int DATABASE_VERSION = 1;

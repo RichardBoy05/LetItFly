@@ -3,14 +3,15 @@ package com.richardmeoli.letitfly.logic.entities;
 import android.content.Context;
 import androidx.annotation.NonNull;
 
+import java.util.List;
 import java.util.UUID;
 import java.util.Arrays;
 import java.util.ArrayList;
 
-import com.richardmeoli.letitfly.logic.database.local.Database;
-import com.richardmeoli.letitfly.logic.database.local.RoutinesTable;
-import com.richardmeoli.letitfly.logic.database.local.PositionsTable;
-import com.richardmeoli.letitfly.logic.database.local.InvalidInputException;
+import com.richardmeoli.letitfly.logic.database.local.sqlite.Database;
+import com.richardmeoli.letitfly.logic.database.local.tables.RoutinesTable;
+import com.richardmeoli.letitfly.logic.database.local.tables.PositionsTable;
+import com.richardmeoli.letitfly.logic.database.local.sqlite.InvalidInputException;
 import com.richardmeoli.letitfly.logic.database.online.firestore.Firestore;
 import com.richardmeoli.letitfly.logic.database.online.firestore.FirestoreAttributes;
 import com.richardmeoli.letitfly.logic.database.online.firestore.FirestoreError;
@@ -78,14 +79,14 @@ public class Routine implements RoutinesTable, PositionsTable, FirestoreAttribut
         String[] r_columns = {R_COLUMN_AUTHOR, R_COLUMN_COLOR, R_COLUMN_UUID,
                 R_COLUMN_TIME, R_COLUMN_IS_PUBLIC, R_COLUMN_NOTES};
 
-        ArrayList<ArrayList<Object>> routines = Database.getInstance(context).selectRecords(
+        List<List<Object>> routines = Database.getInstance(context).selectRecords(
                 ROUTINES_TABLE, r_columns, R_COLUMN_NAME, name, null, null);
 
         if (routines.size() == 0) {
             throw new InvalidInputException("A routine named \"" + name + "\" doesn't exist!");
         }
 
-        ArrayList<Object> routine = routines.get(0);
+        List<Object> routine = routines.get(0);
 
         this.name = name;
         this.author = routine.get(0).toString();
@@ -99,10 +100,10 @@ public class Routine implements RoutinesTable, PositionsTable, FirestoreAttribut
         String[] p_columns = {P_COLUMN_X_POS, P_COLUMN_Y_POS, P_COLUMN_IMG_WIDTH, P_COLUMN_IMG_HEIGHT,
                 P_COLUMN_SHOTS, P_COLUMN_PTS_PER_SHOT, P_COLUMN_PTS_PER_LAST_SHOT, P_COLUMN_NOTES};
 
-        ArrayList<ArrayList<Object>> positionsResult = Database.getInstance(context).selectRecords(
+        List<List<Object>> positionsResult = Database.getInstance(context).selectRecords(
                 POSITIONS_TABLE, p_columns, P_COLUMN_ROUTINE, name, P_COLUMN_ID, true);
 
-        for (ArrayList<Object> i : positionsResult) {
+        for (List<Object> i : positionsResult) {
 
             Position pos = new Position((int) i.get(0), (int) i.get(1), (int) i.get(2), (int) i.get(3),
                     (int) i.get(4), (Integer) i.get(5), (Integer) i.get(6), (String) i.get(7));
@@ -120,7 +121,7 @@ public class Routine implements RoutinesTable, PositionsTable, FirestoreAttribut
     public void save(Context context, final FirestoreOnTransactionCallback callback) {
 
         Database db = Database.getInstance(context);
-        ArrayList<Object> values = new ArrayList<>(Arrays.asList(name, author, color, uuid.toString(), time, isPublic, notes));
+        Object[] values = {name, author, color, uuid.toString(), time, isPublic, notes};
 
         if (!db.insertRecord(ROUTINES_TABLE, values)) {
             callback.onFailure(FirestoreError.LOCAL_DB_ERROR);
@@ -129,8 +130,8 @@ public class Routine implements RoutinesTable, PositionsTable, FirestoreAttribut
 
         for (Position pos : positions) {
 
-            boolean result = db.insertRecord(POSITIONS_TABLE, new ArrayList<>(Arrays.asList(name, pos.getXPos(), pos.getYPos(),
-                    pos.getImgWidth(), pos.getImgHeight(), pos.getShotsCount(), pos.getPointsPerShot(), pos.getPointsPerLastShot(), pos.getNotes())));
+            boolean result = db.insertRecord(POSITIONS_TABLE, new Object[]{name, pos.getXPos(), pos.getYPos(),
+                    pos.getImgWidth(), pos.getImgHeight(), pos.getShotsCount(), pos.getPointsPerShot(), pos.getPointsPerLastShot(), pos.getNotes()});
 
             if (!result) {
                 db.deleteRecords(ROUTINES_TABLE, R_COLUMN_NAME, name);
