@@ -14,6 +14,7 @@ public interface DatabaseContract extends DatabaseAttributes, RoutinesTable, Sta
 
     boolean insertRecord(String table, Object[] values);
     boolean deleteRecords(String table, String whereColumn, Object value);
-    boolean updateRecords(String table, String whereColumn, Object value, String[] columnsToUpdate, Object[] newValues);
-    List<List<Object>> selectRecords(String table, String[] columns, String whereColumn, Object value, String sortingColumn, Boolean ascendent);
+    boolean updateRecords(String table, String[] columnsToUpdate, Object[] newValues, String whereColumn, Object value);
+    List<List<Object>> selectRecords(String table, String[] columnsToSelect, String whereColumn, Object value, String sortingColumn, Boolean ascendent);
+
 }

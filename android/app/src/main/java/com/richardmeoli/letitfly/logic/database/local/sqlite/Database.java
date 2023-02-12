@@ -1,12 +1,12 @@
 package com.richardmeoli.letitfly.logic.database.local.sqlite;
 
+import android.util.Log;
 import android.content.Context;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -27,6 +27,11 @@ public class Database extends SQLiteOpenHelper implements DatabaseContract {
     private static Database instance;
     private static SQLiteDatabase dbHelper;
 
+
+    //------------------------ Tables ------------------------//
+
+    // Routines Table
+
     private static final String R_CREATION_STATEMENT = "CREATE TABLE IF NOT EXISTS '" + ROUTINES_TABLE + "' (\n" +
             "\t'" + R_COLUMN_ID + "' INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,\n" +
             "\t'" + R_COLUMN_NAME + "' VARCHAR(" + R_NAME_MAX_LENGTH + ") UNIQUE NOT NULL,\n" +
@@ -38,14 +43,7 @@ public class Database extends SQLiteOpenHelper implements DatabaseContract {
             "\t'" + R_COLUMN_NOTES + "' VARCHAR(" + R_NOTES_MAX_LENGTH + ")" +
             ");";
 
-    private static final String S_CREATION_STATEMENT = "CREATE TABLE IF NOT EXISTS '" + STATS_TABLE + "'(\n" +
-            "\t'" + S_COLUMN_ID + "' INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,\n" +
-            "\t'" + S_COLUMN_ROUTINE + "' VARCHAR(" + R_NAME_MAX_LENGTH + ") NOT NULL,\n" +
-            "\t'" + S_COLUMN_DATE + "' DATETIME UNIQUE NOT NULL,\n" +
-            "\t'" + S_COLUMN_REPS + "' TINYINT NOT NULL,\n" +
-            "\t'" + S_COLUMN_OUTCOME + "' VARCHAR(" + S_OUTCOME_MAX_LENGTH + ") NOT NULL,\n" +
-            "\t FOREIGN KEY (" + S_COLUMN_ROUTINE + ") REFERENCES " + ROUTINES_TABLE + "(" + R_COLUMN_NAME + ") ON UPDATE CASCADE ON DELETE CASCADE" +
-            ");";
+    // Positions Table
 
     private static final String P_CREATION_STATEMENT = "CREATE TABLE IF NOT EXISTS '" + POSITIONS_TABLE + "' (\n" +
             "\t'" + P_COLUMN_ID + "' INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,\n" +
@@ -61,12 +59,23 @@ public class Database extends SQLiteOpenHelper implements DatabaseContract {
             "\t FOREIGN KEY (" + P_COLUMN_ROUTINE + ") REFERENCES " + ROUTINES_TABLE + "(" + R_COLUMN_NAME + ") ON UPDATE CASCADE ON DELETE CASCADE" +
             ");";
 
+    // Stats Table
 
-    private Database(@Nullable Context context) {
-        super(context, DATABASE_NAME, null, DATABASE_VERSION);
-    }
+    private static final String S_CREATION_STATEMENT = "CREATE TABLE IF NOT EXISTS '" + STATS_TABLE + "'(\n" +
+            "\t'" + S_COLUMN_ID + "' INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,\n" +
+            "\t'" + S_COLUMN_ROUTINE + "' VARCHAR(" + R_NAME_MAX_LENGTH + ") NOT NULL,\n" +
+            "\t'" + S_COLUMN_DATE + "' DATETIME UNIQUE NOT NULL,\n" +
+            "\t'" + S_COLUMN_REPS + "' TINYINT NOT NULL,\n" +
+            "\t'" + S_COLUMN_OUTCOME + "' VARCHAR(" + S_OUTCOME_MAX_LENGTH + ") NOT NULL,\n" +
+            "\t FOREIGN KEY (" + S_COLUMN_ROUTINE + ") REFERENCES " + ROUTINES_TABLE + "(" + R_COLUMN_NAME + ") ON UPDATE CASCADE ON DELETE CASCADE" +
+            ");";
+
+
+    //-------------------- Database initialization --------------------//
 
     public static Database getInstance(@Nullable Context context) {
+        // Singleton Pattern
+
         if (instance == null) {
             instance = new Database(context);
             dbHelper = instance.getWritableDatabase();
@@ -74,52 +83,36 @@ public class Database extends SQLiteOpenHelper implements DatabaseContract {
         return instance;
     }
 
+    private Database(@Nullable Context context) {
+        super(context, DATABASE_NAME, null, DATABASE_VERSION);
+    }
+
+
     @Override
     public void onCreate(SQLiteDatabase db) {
-        // code executed at the first creation of the database (tables creation)
+        // Creating tables
 
         db.execSQL(R_CREATION_STATEMENT);
-        db.execSQL(S_CREATION_STATEMENT);
         db.execSQL(P_CREATION_STATEMENT);
+        db.execSQL(S_CREATION_STATEMENT);
 
     }
 
     @Override
     public void onConfigure(SQLiteDatabase db) {
+        // Configuration
+
         db.execSQL("PRAGMA foreign_keys = ON;");
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
 
-        // TODO: consider implementing its functionalities in the future
+        // TODO: Implement this method only if changes to the database schema are expected in the future.
     }
 
-    // database methods
 
-    private ContentValues buildContentValues(@NonNull String[] columns, @NonNull Object[] values) {
-        // Build a `ContentValues` object from the given column names and values.
-
-        ContentValues record = new ContentValues(columns.length);
-
-        int index = 0;
-        for (String key : columns) {
-
-            if (values[index] instanceof Integer) {
-                record.put(key, (int) (values[index]));
-            } else if (values[index] instanceof Boolean) {
-                record.put(key, (boolean) (values[index]));
-            } else if (values[index] instanceof String) {
-                record.put(key, (String) (values[index]));
-            } else {
-                record.putNull(key);
-            }
-
-            index++;
-        }
-
-        return record;
-    }
+    //---------------- Database methods -----------------//
 
     @Override
     public boolean insertRecord(@NonNull String table, @NonNull Object[] values) {
@@ -170,9 +163,10 @@ public class Database extends SQLiteOpenHelper implements DatabaseContract {
 
     @Override
     public boolean deleteRecords(String table, String whereColumn, Object value) {
-        // deletes the records (row) of a 'table' where column specified as 'whereColumn'
-        // (pass null to delete all rows)
-        // matches the given parameter 'value'
+        // Deletes rows from the 'table' where the value in the 'whereColumn'
+        // column matches the specified 'value'.
+        // Pass 'null' as the 'value' parameter to delete all rows in the table.
+
 
         String whereClause = whereColumn == null ? null : whereColumn + " LIKE ?";
         String[] valuesClause = value == null ? null : new String[]{value.toString()};
@@ -180,21 +174,22 @@ public class Database extends SQLiteOpenHelper implements DatabaseContract {
         try {
 
             return dbHelper.delete(table, whereClause, valuesClause) != 0;
-            // returns true if the insert operation was successful, false otherwise.
+            // returns true if the delete operation was successful, false otherwise.
 
         } catch (SQLiteException e) {
-            e.printStackTrace();
+            Log.w(TAG, e.toString(), e);
             return false;
         }
     }
 
     @Override
-    public boolean updateRecords(String table, String whereColumn, Object value, String[] columnsToUpdate, Object[] newValues) {
-        // updates the records (row) where the column 'whereColumn'
-        // matches the given parameter 'value',
-        // (pass null to update all rows)
-        // replacing the old values with the 'newValues'
-        // for the matching 'columnsToUpdate'
+    public boolean updateRecords(String table, String[] columnsToUpdate, Object[] newValues, String whereColumn, Object value) {
+        // Updates rows in the table where the 'whereColumn' column
+        // matches the specified 'value' parameter.
+        // Pass 'null' as the 'value' parameter to update all rows in the table.
+        // The matching rows will have their old values replaced with the values in 'newValues'
+        // for the columns specified in 'columnsToUpdate'.
+
 
         if (columnsToUpdate.length != newValues.length || Arrays.asList(columnsToUpdate).contains(R_S_P_COLUMN_ID)) {
             // columns and values must have the same length
@@ -206,31 +201,26 @@ public class Database extends SQLiteOpenHelper implements DatabaseContract {
         String[] valuesClause = value == null ? null : new String[]{value.toString()};
 
         try {
-
-            return dbHelper.update(table,
-                    buildContentValues(columnsToUpdate, newValues),
-                    whereClause, valuesClause) != 0;
+            return dbHelper.update(table, buildContentValues(columnsToUpdate, newValues), whereClause, valuesClause) != 0;
+            // returns true if the update operation was successful, false otherwise.
 
         } catch (SQLiteException e) {
-            e.printStackTrace();
+            Log.w(TAG, e.toString(), e);
             return false;
         }
     }
 
     @Override
-    public List<List<Object>> selectRecords(String table,
-                                            String[] columns,
-                                            String whereColumn,
-                                            Object value,
-                                            String sortingColumn,
-                                            Boolean ascendent) {
-        // selects the values of the selected 'columns' (pass null to select from all columns)
-        // of the given 'table', where the column 'whereColumn' matches the given
-        // parameter 'value' (pass null to select all rows).
-        // Results are sorted based on the parameter 'sortingColumn' (null if not needed),
-        // ascendent if true else descendent (null if not needed).
-        // Grouping and having caluses are not included
-        // for better readability and because they are not useful in this application)
+    public List<List<Object>> selectRecords(String table, String[] columnsToSelect, String whereColumn, Object value, String sortingColumn, Boolean ascendent) {
+        // Selects the values of the specified 'columns'
+        // (pass 'null' to select all columns) from the given 'table'.
+        // The 'whereColumn' is used to filter the results, where
+        // its value matches the specified 'value' (pass 'null' to select all rows).
+        // The 'sortingColumn' parameter is used to sort the results, with
+        // 'ascendent' sorting if set to 'true' and 'descendent' sorting if set to 'false'
+        // (pass 'null' if sorting is not required).
+        // Note: Grouping and having clauses are excluded for increased readability
+        // and as they are not applicable in this application.
 
         String whereClause = whereColumn == null ? null : whereColumn + " = ?";
         String[] valuesClause = value == null ? null : new String[]{value.toString()};
@@ -242,7 +232,7 @@ public class Database extends SQLiteOpenHelper implements DatabaseContract {
 
         try (Cursor cursor = dbHelper.query(
                 table,
-                columns,
+                columnsToSelect,
                 whereClause,
                 valuesClause,
                 null,
@@ -251,20 +241,20 @@ public class Database extends SQLiteOpenHelper implements DatabaseContract {
 
             List<List<Object>> result = new ArrayList<>();
 
-            if (columns == null) {
+            if (columnsToSelect == null) {
 
                 switch (table) { // columns and values must have the same length
 
                     case ROUTINES_TABLE:
-                        columns = R_COLUMNS_ID_INCLUDED;
+                        columnsToSelect = R_COLUMNS_ID_INCLUDED;
                         break;
 
                     case STATS_TABLE:
-                        columns = S_COLUMNS_ID_INCLUDED;
+                        columnsToSelect = S_COLUMNS_ID_INCLUDED;
                         break;
 
                     case POSITIONS_TABLE:
-                        columns = P_COLUMNS_ID_INCLUDED;
+                        columnsToSelect = P_COLUMNS_ID_INCLUDED;
                         break;
 
                     default: // non-existent table
@@ -275,7 +265,7 @@ public class Database extends SQLiteOpenHelper implements DatabaseContract {
             while (cursor.moveToNext()) {
 
                 List<Object> item = new ArrayList<>();
-                for (String i : columns) {
+                for (String i : columnsToSelect) {
 
                     switch (cursor.getType(cursor.getColumnIndexOrThrow(i))) {
 
@@ -304,10 +294,34 @@ public class Database extends SQLiteOpenHelper implements DatabaseContract {
             return result;
 
         } catch (SQLiteException | IllegalArgumentException e) {
-            e.printStackTrace();
+            Log.w(TAG, e.toString(), e);
             return null;
 
         }
+    }
+
+    private ContentValues buildContentValues(@NonNull String[] columns, @NonNull Object[] values) {
+        // Build a `ContentValues` object from the given column names and values.
+
+        ContentValues record = new ContentValues(columns.length);
+
+        int index = 0;
+        for (String key : columns) {
+
+            if (values[index] instanceof Integer) {
+                record.put(key, (int) (values[index]));
+            } else if (values[index] instanceof Boolean) {
+                record.put(key, (boolean) (values[index]));
+            } else if (values[index] instanceof String) {
+                record.put(key, (String) (values[index]));
+            } else {
+                record.putNull(key);
+            }
+
+            index++;
+        }
+
+        return record;
     }
 
 }
