@@ -1,6 +1,8 @@
 package com.richardmeoli.letitfly.ui.main;
 
+import android.content.Intent;
 import android.os.Bundle;
+
 import androidx.fragment.app.Fragment;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -9,6 +11,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.richardmeoli.letitfly.R;
 import com.richardmeoli.letitfly.logic.database.local.sqlite.Database;
+import com.richardmeoli.letitfly.ui.authentication.LoginActivity;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -37,9 +40,12 @@ public class MainActivity extends AppCompatActivity {
 
         bottomBar.setOnItemSelectedListener(item -> {
 
-            switch (item.getItemId()){
+            switch (item.getItemId()) {
                 case R.id.routine_tab:
-                    showFragment(new RoutineFragment());
+//                    showFragment(new RoutineFragment());
+                    Intent myIntent = new Intent(MainActivity.this, LoginActivity.class);
+                    MainActivity.this.startActivity(myIntent);
+
                     break;
 
                 case R.id.play_tab:
@@ -65,7 +71,7 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
     }
 
-    private void showFragment(Fragment fragment){
+    private void showFragment(Fragment fragment) {
         getSupportFragmentManager().beginTransaction().replace(R.id.frame_layout, fragment).commit();
     }
 
