@@ -2,10 +2,11 @@ package com.richardmeoli.letitfly.logic.database.online.firestore;
 
 public interface FirestoreAttributes {
 
-    //--------------------- Routines ---------------------//
+    //--------------------- Collections ---------------------//
 
     String ROUTINES_COLLECTION = "routines";
     String POSITIONS_COLLECTION = "positions";
+    String USERS_COLLECTION = "users";
 
     //---------------- "Routines" document ---------------//
 
@@ -18,15 +19,20 @@ public interface FirestoreAttributes {
 
     //--------------- "Positions" document ---------------//
 
-    String P_FIELDS_X_POS = "x_pos";
-    String P_FIELDS_Y_POS = "y_pos";
-    String P_FIELDS_IMG_WIDTH = "img_width";
-    String P_FIELDS_IMG_HEIGHT = "img_height";
-    String P_FIELDS_SHOTS = "shots";
-    String P_FIELDS_PTS_PER_SHOT = "pts_per_shot";
-    String P_FIELDS_PTS_PER_LAST_SHOT = "pts_per_last_shot";
-    String P_FIELDS_NOTES = "notes";
-    String[] P_FIELDS = {P_FIELDS_X_POS, P_FIELDS_Y_POS, P_FIELDS_IMG_WIDTH, P_FIELDS_IMG_HEIGHT,
-            P_FIELDS_SHOTS, P_FIELDS_PTS_PER_SHOT, P_FIELDS_PTS_PER_LAST_SHOT, P_FIELDS_NOTES};
+    String P_FIELD_X_POS = "x_pos";
+    String P_FIELD_Y_POS = "y_pos";
+    String P_FIELD_IMG_WIDTH = "img_width";
+    String P_FIELD_IMG_HEIGHT = "img_height";
+    String P_FIELD_SHOTS = "shots";
+    String P_FIELD_PTS_PER_SHOT = "pts_per_shot";
+    String P_FIELD_PTS_PER_LAST_SHOT = "pts_per_last_shot";
+    String P_FIELD_NOTES = "notes";
+    String[] P_FIELDS = {P_FIELD_X_POS, P_FIELD_Y_POS, P_FIELD_IMG_WIDTH, P_FIELD_IMG_HEIGHT,
+            P_FIELD_SHOTS, P_FIELD_PTS_PER_SHOT, P_FIELD_PTS_PER_LAST_SHOT, P_FIELD_NOTES};
+
+    //--------------- "Users" document ---------------//
+
+    String U_FIELD_UID = "uid";
+    String[] U_FIELDS = {U_FIELD_UID};
 
 }

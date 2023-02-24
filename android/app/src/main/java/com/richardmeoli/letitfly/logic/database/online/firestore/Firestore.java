@@ -52,6 +52,10 @@ public class Firestore implements FirestoreContract {
                 keys = P_FIELDS;
                 break;
 
+            case USERS_COLLECTION:
+                keys = U_FIELDS;
+                break;
+
             default: // non-existent collection
                 callback.onFailure(FirestoreError.NO_SUCH_COLLECTION);
                 return;
@@ -352,6 +356,18 @@ public class Firestore implements FirestoreContract {
 
                 for (String field : fields) {
                     if (!Arrays.asList(P_FIELDS).contains(field)) {
+                        return true;
+                    }
+                }
+                return false;
+
+            case USERS_COLLECTION:
+                if (fields == null){ // null refers to all the fields
+                    return false;
+                }
+
+                for (String field : fields) {
+                    if (!Arrays.asList(U_FIELDS).contains(field)) {
                         return true;
                     }
                 }
