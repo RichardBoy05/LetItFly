@@ -7,6 +7,6 @@ import java.util.Map;
 public interface FirestoreOnSingleQueryCallback {
     // Interface for managing the outcome of single queries in Firestore.
 
-    void onSuccess(Map<String, Object> list);
+    void onSuccess(Map<String, Object> map);
     void onFailure(FirestoreError error);
 }

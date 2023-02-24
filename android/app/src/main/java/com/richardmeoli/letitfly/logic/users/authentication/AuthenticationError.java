@@ -7,7 +7,17 @@ public enum AuthenticationError {
 
     //--------------- ERRORS ---------------//
 
-    REGISTRATION_ERROR("REGISTRATION_ERROR", "An error occured during the registration process!");
+    UNEXPECTED_ERROR("UNEXPECTED_ERROR", "An unexpected error has occured!"),
+    USER_DOES_NOT_EXIST_ERROR("USER_DOES_NOT_EXIST_ERROR", "Attempt to refer to a non-existent user!"),
+    USERNAME_ASSIGNMENT_ERROR("USERNAME_ASSIGNMENT_ERROR", "An error occurred while assigning the username to its account!"),
+    USER_COLLISION_ERROR("USER_COLLISION_ERROR", "The email address is already in use by another account!"),
+    USER_RELOADING_ERROR("ACCOUNT_RELOADING_ERROR", "An error occurred while reloading the current user data!"),
+    EMAIL_VERIFICATION_ERROR("EMAIL_VERIFICATION_ERROR", "Unable to send an email to verify this account!"),
+    EMAIL_RESET_ERROR("EMAIL_RESET_ERROR", "Unable to send an email to reset this account password!"),
+    FIRESTORE_ERROR("FIRESTORE_ERROR", "An error occurred while interacting with the Firestore database!"),
+    ACCOUNT_NOT_VERIFIED_ERROR("ACCOUNT_NOT_VERIFIED_ERROR", "This account email has not been verified yet!"),
+    INVALID_PASSWORD_ERROR("INVALID_PASSWORD_ERROR", "The specified credentials are invalid!"),
+    TOO_MANY_REQUESTS_ERROR("TOO_MANY_REQUESTS_ERROR", "Access to this account has been temporarily disabled due to many failed login attempts!");
 
     //--------------- ERRORS ---------------//
 

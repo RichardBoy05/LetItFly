@@ -9,12 +9,13 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.google.firebase.auth.FirebaseUser;
 import com.richardmeoli.letitfly.R;
+import com.richardmeoli.letitfly.logic.database.local.tables.RoutinesTable;
+import com.richardmeoli.letitfly.logic.users.authentication.AuthenticationError;
 import com.richardmeoli.letitfly.logic.users.authentication.Authenticator;
-import com.richardmeoli.letitfly.logic.users.authentication.callbacks.AuthOnAccountRegistrationCallback;
+import com.richardmeoli.letitfly.logic.users.authentication.callbacks.AuthOnActionCallback;
 
-public class RegisterActivity extends AppCompatActivity {
+public class RegisterActivity extends AppCompatActivity implements RoutinesTable {
 
     private EditText usernameField;
     private EditText emailField;
@@ -49,11 +50,11 @@ public class RegisterActivity extends AppCompatActivity {
 //                return;
 //            }
 //
-//            if (username.length() < 3 || username.length() > 20){ // TODO: make this values universal for the app
+//            if (username.length() < R_AUTHOR_MIN_LENGTH || username.length() > R_AUTHOR_MAX_LENGTH){
 //                Toast.makeText(this, "Username length must be within 3 and 20 characters!", Toast.LENGTH_SHORT).show();
 //            }
 //
-//            if (!username.matches("^[a-zA-Z0-9[ ]]+$")){ // TODO: make this value universal for the app
+//            if (!username.matches(R_AUTHOR_VALID_CHARACTERS){
 //                Toast.makeText(this, "Username contains invalid characters!", Toast.LENGTH_SHORT).show();
 //                return;
 //            }
@@ -62,45 +63,66 @@ public class RegisterActivity extends AppCompatActivity {
 //                Toast.makeText(this, "This email ain't valid!", Toast.LENGTH_SHORT).show();
 //                return;
 //            }
+
+//            if (password.length < 6){
+//                Toast.makeText(this, "Password must be at least 6 characters long!", Toast.LENGTH_SHORT).show();
+//                return;
+//            }
 //
 //            if (!password.equals(confirmPassword)){
 //                Toast.makeText(this, "The two password do not match!", Toast.LENGTH_SHORT).show();
 //                return;
 //            }
 
-            String username = "";
-            String email = "";
-            String password = "";
+            String username = "username";
+            String email = "email";
+            String password = "password";
 
             Authenticator auth = Authenticator.getInstance();
 
             auth.checkUsernameUnique(username, exists -> {
 
-                if (!exists) {
-
-                    auth.sendVerficationEmail(email); // TODO: if verified move on, else stop
-
-                    progressDialog.setTitle("Registrazione");
-                    progressDialog.setMessage("Per favore attendi mentre vieni registrato...");
-                    progressDialog.setCanceledOnTouchOutside(false);
-                    progressDialog.show();
-
-                    auth.registerUser(username, email, password, new AuthOnAccountRegistrationCallback() {
-                        @Override
-                        public void onSuccess(FirebaseUser user) {
-                            progressDialog.dismiss();
-                            Toast.makeText(RegisterActivity.this, user.toString(), Toast.LENGTH_SHORT).show();
-                        }
-
-                        @Override
-                        public void onFailure(String error) {
-                            progressDialog.dismiss();
-                            Toast.makeText(RegisterActivity.this, error, Toast.LENGTH_SHORT).show();
-
-                        }
-                    });
-
+                if (exists) {
+                    Toast.makeText(this, "The username '" + username + "' is already in use!", Toast.LENGTH_SHORT).show();
+                    return;
                 }
+
+                progressDialog.setTitle("Registrazione");
+                progressDialog.setMessage("Per favore attendi mentre vieni registrato...");
+                progressDialog.setCanceledOnTouchOutside(false);
+                progressDialog.show();
+
+                auth.registerUser(username, email, password, new AuthOnActionCallback() {
+                    @Override
+                    public void onSuccess() {
+
+                        progressDialog.dismiss();
+
+                        auth.sendVerificationEmail(new AuthOnActionCallback() {
+                            @Override
+                            public void onSuccess() {
+                                Toast.makeText(RegisterActivity.this, "Ottimo! Verifica la mail ora!", Toast.LENGTH_SHORT).show();
+                            }
+
+                            @Override
+                            public void onFailure(AuthenticationError error) {
+                                Toast.makeText(RegisterActivity.this, error.toString(), Toast.LENGTH_SHORT).show();
+
+                            }
+                        });
+
+
+
+                    }
+
+                    @Override
+                    public void onFailure(AuthenticationError error) {
+                        progressDialog.dismiss();
+                        Toast.makeText(RegisterActivity.this, error.toString(), Toast.LENGTH_SHORT).show();
+
+                    }
+                });
+
             });
 
 

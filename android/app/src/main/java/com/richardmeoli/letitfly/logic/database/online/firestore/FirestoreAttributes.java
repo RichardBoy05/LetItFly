@@ -32,7 +32,8 @@ public interface FirestoreAttributes {
 
     //--------------- "Users" document ---------------//
 
+    String U_FIELD_EMAIL = "email";
     String U_FIELD_UID = "uid";
-    String[] U_FIELDS = {U_FIELD_UID};
+    String[] U_FIELDS = {U_FIELD_EMAIL, U_FIELD_UID};
 
 }
