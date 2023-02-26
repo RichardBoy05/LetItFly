@@ -1,19 +1,20 @@
 package com.richardmeoli.letitfly.ui.main;
 
-import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
 import androidx.appcompat.app.AppCompatActivity;
-
 import com.google.android.material.bottomnavigation.BottomNavigationView;
-
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.richardmeoli.letitfly.R;
 import com.richardmeoli.letitfly.logic.database.local.sqlite.Database;
-import com.richardmeoli.letitfly.ui.authentication.LoginActivity;
+import com.richardmeoli.letitfly.logic.users.authentication.AuthenticationError;
+import com.richardmeoli.letitfly.logic.users.authentication.Authenticator;
+import com.richardmeoli.letitfly.logic.users.authentication.callbacks.AuthOnActionCallback;
 
 public class MainActivity extends AppCompatActivity {
+
+    private static final String TAG = "MainActivity";
 
     private BottomNavigationView bottomBar;
 
@@ -41,11 +42,9 @@ public class MainActivity extends AppCompatActivity {
         bottomBar.setOnItemSelectedListener(item -> {
 
             switch (item.getItemId()) {
-                case R.id.routine_tab:
-//                    showFragment(new RoutineFragment());
-                    Intent myIntent = new Intent(MainActivity.this, LoginActivity.class);
-                    MainActivity.this.startActivity(myIntent);
 
+                case R.id.routine_tab:
+                    showFragment(new RoutineFragment());
                     break;
 
                 case R.id.play_tab:
@@ -67,8 +66,27 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-//        Database.getInstance(this).getDbHelper().close();
         super.onDestroy();
+    }
+
+    @Override
+    public void onResume(){
+        super.onResume();
+
+        Authenticator auth = Authenticator.getInstance();
+
+        auth.isAccountVerified(new AuthOnActionCallback() {
+            @Override
+            public void onSuccess() {
+                // do nothing
+            }
+
+            @Override
+            public void onFailure(AuthenticationError error) {
+                auth.redirectToLoginActivity(MainActivity.this);
+            }
+        });
+
     }
 
     private void showFragment(Fragment fragment) {

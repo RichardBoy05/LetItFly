@@ -9,7 +9,7 @@
     <EditText
         android:id="@+id/registerUsernameField"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="59dp"
         android:layout_x="80dp"
         android:layout_y="89dp"
         android:ems="10"
@@ -21,7 +21,7 @@
     <EditText
         android:id="@+id/registerEmailField"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="57dp"
         android:layout_x="77dp"
         android:layout_y="164dp"
         android:ems="10"
@@ -32,10 +32,10 @@
 
     <EditText
         android:id="@+id/registerPasswordField"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_x="81dp"
-        android:layout_y="257dp"
+        android:layout_width="227dp"
+        android:layout_height="58dp"
+        android:layout_x="77dp"
+        android:layout_y="243dp"
         android:ems="10"
         android:hint="Password"
         android:inputType="textPassword"
@@ -45,7 +45,7 @@
     <EditText
         android:id="@+id/registerConfirmPasswordField"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="58dp"
         android:layout_x="79dp"
         android:layout_y="329dp"
         android:ems="10"
@@ -58,8 +58,8 @@
         android:id="@+id/alreadyHaveAccountButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_x="76dp"
-        android:layout_y="569dp"
+        android:layout_x="79dp"
+        android:layout_y="574dp"
         android:text="Already have an account?"
         tools:layout_editor_absoluteX="77dp"
         tools:layout_editor_absoluteY="578dp" />
@@ -69,9 +69,25 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_x="138dp"
-        android:layout_y="454dp"
+        android:layout_y="411dp"
         android:text="Register"
         tools:layout_editor_absoluteX="139dp"
         tools:layout_editor_absoluteY="470dp" />
+
+    <Button
+        android:id="@+id/resendVerificationEmailButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_x="76dp"
+        android:layout_y="503dp"
+        android:text="ResendVerificationMail" />
+
+    <Button
+        android:id="@+id/registerGoButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_x="138dp"
+        android:layout_y="647dp"
+        android:text="Go" />
 
 </AbsoluteLayout>

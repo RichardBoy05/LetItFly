@@ -9,6 +9,7 @@ public enum AuthenticationError {
 
     UNEXPECTED_ERROR("UNEXPECTED_ERROR", "An unexpected error has occured!"),
     USER_DOES_NOT_EXIST_ERROR("USER_DOES_NOT_EXIST_ERROR", "Attempt to refer to a non-existent user!"),
+    NO_USER_LOGGED_IN_ERROR("NO_USER_LOGGED_IN_ERROR", "No user is currently logged in!"),
     USERNAME_ASSIGNMENT_ERROR("USERNAME_ASSIGNMENT_ERROR", "An error occurred while assigning the username to its account!"),
     USER_COLLISION_ERROR("USER_COLLISION_ERROR", "The email address is already in use by another account!"),
     USER_RELOADING_ERROR("ACCOUNT_RELOADING_ERROR", "An error occurred while reloading the current user data!"),

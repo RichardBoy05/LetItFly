@@ -17,7 +17,8 @@ public enum FirestoreError {
     ERROR_UPDATING_DOCUMENT("ERROR_UPDATING_DOCUMENTS", "An unexpected error has occured while updating the documents of the Firestore Database!"),
     ERROR_GETTING_DOCUMENT("ERROR_GETTING_DOCUMENT", "An unexpected error has occured while getting the document from the Firestore Database!"),
     ERROR_GETTING_DOCUMENTS("ERROR_GETTING_DOCUMENTS", "An unexpected error has occured while getting the documents from the Firestore Database!"),
-    LOCAL_DB_ERROR("LOCAL_DB_ERROR", "An unexpected error has occured with the local Database!");
+    LOCAL_DB_ERROR("LOCAL_DB_ERROR", "An unexpected error has occured with the local Database!"),
+    BACKUP_ERROR("BACKUP_ERROR", "An unexpected error has occurred while attempting to backup the local database changes!");
 
     //--------------- ERRORS ---------------//
 

@@ -1,6 +1,8 @@
 package com.richardmeoli.letitfly.logic.entities;
 
 import android.content.Context;
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 
 import java.util.List;
@@ -16,8 +18,13 @@ import com.richardmeoli.letitfly.logic.database.online.firestore.Firestore;
 import com.richardmeoli.letitfly.logic.database.online.firestore.FirestoreAttributes;
 import com.richardmeoli.letitfly.logic.database.online.firestore.FirestoreError;
 import com.richardmeoli.letitfly.logic.database.online.callbacks.FirestoreOnTransactionCallback;
+import com.richardmeoli.letitfly.logic.users.backup.BackupError;
+import com.richardmeoli.letitfly.logic.users.backup.BackupManager;
+import com.richardmeoli.letitfly.logic.users.backup.callbacks.BackupOnActionCallback;
 
 public class Routine implements RoutinesTable, PositionsTable, FirestoreAttributes { // abstraction of the concept of Routine
+
+    private static final String TAG = "Routine";
 
     // fields
 
@@ -140,27 +147,60 @@ public class Routine implements RoutinesTable, PositionsTable, FirestoreAttribut
             }
         }
 
-        if (isPublic) {
+        performBackup(context, new BackupOnActionCallback() { // backup changes
+            @Override
+            public void onSuccess() {
+                // do nothing
+            }
 
-            uploadToFirestore(new FirestoreOnTransactionCallback() {
-                @Override
-                public void onSuccess() {
-                    callback.onSuccess();
-                }
+            @Override
+            public void onFailure(BackupError error) {
+                callback.onFailure(FirestoreError.BACKUP_ERROR);
+            }
+        });
 
-                @Override
-                public void onFailure(FirestoreError error) {
-                    callback.onFailure(error);
-
-                }
-
-            });
-
+        if (!isPublic) {
+            callback.onSuccess();
+            return;
         }
+
+        uploadToFirestore(new FirestoreOnTransactionCallback() {
+            @Override
+            public void onSuccess() {
+                callback.onSuccess();
+            }
+
+            @Override
+            public void onFailure(FirestoreError error) {
+                callback.onFailure(error);
+
+            }
+
+        });
+
 
     }
 
-    private void uploadToFirestore(final FirestoreOnTransactionCallback callback){
+    private void performBackup(Context context, final BackupOnActionCallback callback){
+
+        BackupManager bm = BackupManager.getInstance();
+        bm.backupDatabase(context, new BackupOnActionCallback() {
+            @Override
+            public void onSuccess() {
+                Log.d(TAG, "Database successfully backed up!");
+                callback.onSuccess();
+            }
+
+            @Override
+            public void onFailure(BackupError error) {
+                Log.e(TAG, "Impossible to backup database!");
+                callback.onFailure(error);
+            }
+        });
+
+    }
+
+    private void uploadToFirestore(final FirestoreOnTransactionCallback callback) {
 
         Firestore fs = Firestore.getInstance();
 
@@ -170,7 +210,7 @@ public class Routine implements RoutinesTable, PositionsTable, FirestoreAttribut
 
                 for (int i = 0; i < positions.size(); i++) {
 
-                    fs.addDocument(POSITIONS_COLLECTION, uuid + " (" + (int)(i + 1) + ")", new Object[]{positions.get(i).getXPos(), positions.get(i).getYPos(),
+                    fs.addDocument(POSITIONS_COLLECTION, uuid + " (" + (int) (i + 1) + ")", new Object[]{positions.get(i).getXPos(), positions.get(i).getYPos(),
                             positions.get(i).getImgWidth(), positions.get(i).getImgHeight(), positions.get(i).getShotsCount(),
                             positions.get(i).getPointsPerShot(), positions.get(i).getPointsPerLastShot(), positions.get(i).getNotes()}, new FirestoreOnTransactionCallback() {
 
@@ -208,7 +248,6 @@ public class Routine implements RoutinesTable, PositionsTable, FirestoreAttribut
             }
         });
     }
-
 
 
     @NonNull
