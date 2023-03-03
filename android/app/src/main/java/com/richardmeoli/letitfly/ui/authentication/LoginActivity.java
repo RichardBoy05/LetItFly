@@ -75,7 +75,6 @@ public class LoginActivity extends AppCompatActivity {
                                 public void onSuccess() { // user's database successfully downloaded
 
                                     progressDialog.dismiss();
-
                                     Log.d(TAG, "User data retrieved successfully!");
                                     Toast.makeText(LoginActivity.this, "Logged in as " + auth.getCurrentUser().getDisplayName() + ", " + auth.getCurrentUser().getDisplayName(), Toast.LENGTH_SHORT).show();
                                     Intent myIntent = new Intent(LoginActivity.this, MainActivity.class);
@@ -87,19 +86,6 @@ public class LoginActivity extends AppCompatActivity {
                                 public void onFailure(BackupError error) { // failed to download database
 
                                     progressDialog.dismiss();
-
-                                    if (error == BackupError.NO_SUCH_FILE_IN_STORAGE_ERROR) {
-
-                                        Log.e(TAG, "User has no data to retrieve");
-                                        Database.getInstance(LoginActivity.this).wipeDatabase(LoginActivity.this);
-
-//                                        Toast.makeText(LoginActivity.this, "Logged in as " + auth.getCurrentUser().getDisplayName() + ", " + auth.getCurrentUser().getDisplayName(), Toast.LENGTH_SHORT).show();
-                                        Intent myIntent = new Intent(LoginActivity.this, MainActivity.class);
-                                        LoginActivity.this.startActivity(myIntent);
-                                        return;
-
-                                    }
-
                                     Log.e(TAG, error.toString());
                                     Toast.makeText(LoginActivity.this, "Impossibile recuperare i dati dell'utente", Toast.LENGTH_SHORT).show();
                                     auth.signOutUser();

@@ -362,24 +362,4 @@ public class Database extends SQLiteOpenHelper implements DatabaseContract {
         return dbHelper;
     }
 
-    public void wipeDatabase(Context context) {
-
-        try {
-
-            dbHelper.delete(ROUTINES_TABLE, null, null);
-            dbHelper.delete(POSITIONS_TABLE, null, null);
-            dbHelper.delete(STATS_TABLE, null, null);
-
-            dbHelper.execSQL("DELETE FROM SQLITE_SEQUENCE WHERE NAME = '" + ROUTINES_TABLE + "'");
-            dbHelper.execSQL("DELETE FROM SQLITE_SEQUENCE WHERE NAME = '" + POSITIONS_TABLE + "'");
-            dbHelper.execSQL("DELETE FROM SQLITE_SEQUENCE WHERE NAME = '" + STATS_TABLE + "'");
-
-
-        } catch (SQLException e) {
-
-            Log.e(TAG, "SQl error", e);
-            Toast.makeText(context, e.toString(), Toast.LENGTH_SHORT).show();
-        }
-    }
-
 }

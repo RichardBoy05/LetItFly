@@ -69,8 +69,8 @@ public class RoutineFragment extends Fragment implements DatabaseAttributes, Fir
 
 
         delete.setOnClickListener(v -> {
-            Database.getInstance(requireContext()).wipeDatabase(requireContext());
-            Toast.makeText(getActivity(), "wiped out db", Toast.LENGTH_SHORT).show();
+            requireContext().deleteDatabase(DATABASE_NAME);
+            Toast.makeText(getActivity(), "deleted db", Toast.LENGTH_SHORT).show();
 
         });
 
