@@ -1,5 +1,6 @@
 package com.richardmeoli.letitfly.logic.database.local.sqlite;
 
+import android.database.SQLException;
 import android.util.Log;
 import android.content.Context;
 import android.content.ContentValues;
@@ -7,6 +8,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -115,7 +117,7 @@ public class Database extends SQLiteOpenHelper implements DatabaseContract {
     //---------------- Database methods -----------------//
 
     @Override
-    public boolean insertRecord(@NonNull String table, @NonNull Object[] values) {
+    public boolean insertRecord(@NonNull String table, @NonNull Object[] values, @NonNull Context context) {
         // Insert a new record (row) into a specified table
         // of the database based on the given 'values'.
 
@@ -149,41 +151,60 @@ public class Database extends SQLiteOpenHelper implements DatabaseContract {
         }
 
         ContentValues record = buildContentValues(columns, values);
+        DbTransactionListener listener = new DbTransactionListener(context);
 
-        try {
-            return dbHelper.insert(table, null, record) != -1;
-            // returns true if the insert operation was successful, false otherwise.
+        try { // returns true if the insert operation was successful, false otherwise.
 
+            dbHelper.beginTransactionWithListener(listener);
+
+            if (dbHelper.insert(table, null, record) != -1) {
+                dbHelper.setTransactionSuccessful();
+                return true;
+            }
+            return false;
 
         } catch (SQLiteException e) {
-            Log.w(TAG, e.toString(), e);
+            Log.e(TAG, e.toString(), e);
             return false;
+
+        } finally {
+            dbHelper.endTransaction();
         }
     }
 
     @Override
-    public boolean deleteRecords(String table, String whereColumn, Object value) {
+    public boolean deleteRecords(String table, String whereColumn, Object value, @NonNull Context context) {
         // Deletes rows from the 'table' where the value in the 'whereColumn'
         // column matches the specified 'value'.
         // Pass 'null' as the 'value' parameter to delete all rows in the table.
 
-
         String whereClause = whereColumn == null ? null : whereColumn + " LIKE ?";
         String[] valuesClause = value == null ? null : new String[]{value.toString()};
 
-        try {
+        DbTransactionListener listener = new DbTransactionListener(context);
 
-            return dbHelper.delete(table, whereClause, valuesClause) != 0;
-            // returns true if the delete operation was successful, false otherwise.
+        try { // returns true if the delete operation was successful, false otherwise.
+
+            dbHelper.beginTransactionWithListener(listener);
+
+            if (dbHelper.delete(table, whereClause, valuesClause) != 0) {
+
+                dbHelper.setTransactionSuccessful();
+                return true;
+            }
+            return false;
 
         } catch (SQLiteException e) {
-            Log.w(TAG, e.toString(), e);
+            Log.e(TAG, e.toString(), e);
             return false;
+
+        } finally {
+            dbHelper.endTransaction();
         }
     }
 
     @Override
-    public boolean updateRecords(String table, String[] columnsToUpdate, Object[] newValues, String whereColumn, Object value) {
+    public boolean updateRecords(String table, String[] columnsToUpdate, Object[] newValues, String whereColumn, Object value, @NonNull Context context) {
         // Updates rows in the table where the 'whereColumn' column
         // matches the specified 'value' parameter.
         // Pass 'null' as the 'value' parameter to update all rows in the table.
@@ -200,14 +221,27 @@ public class Database extends SQLiteOpenHelper implements DatabaseContract {
         String whereClause = whereColumn == null ? null : whereColumn + " LIKE ?";
         String[] valuesClause = value == null ? null : new String[]{value.toString()};
 
-        try {
-            return dbHelper.update(table, buildContentValues(columnsToUpdate, newValues), whereClause, valuesClause) != 0;
-            // returns true if the update operation was successful, false otherwise.
+        DbTransactionListener listener = new DbTransactionListener(context);
+
+        try { // returns true if the update operation was successful, false otherwise.
+
+            dbHelper.beginTransactionWithListener(listener);
+
+            if (dbHelper.update(table, buildContentValues(columnsToUpdate, newValues), whereClause, valuesClause) != 0) {
+
+                dbHelper.setTransactionSuccessful();
+                return true;
+            }
+            return false;
 
         } catch (SQLiteException e) {
-            Log.w(TAG, e.toString(), e);
+            Log.e(TAG, e.toString(), e);
             return false;
+
+        } finally {
+            dbHelper.endTransaction();
         }
+
     }
 
     @Override
@@ -322,6 +356,30 @@ public class Database extends SQLiteOpenHelper implements DatabaseContract {
         }
 
         return record;
+    }
+
+    public SQLiteDatabase getDbHelper() {
+        return dbHelper;
+    }
+
+    public void wipeDatabase(Context context) {
+
+        try {
+
+            dbHelper.delete(ROUTINES_TABLE, null, null);
+            dbHelper.delete(POSITIONS_TABLE, null, null);
+            dbHelper.delete(STATS_TABLE, null, null);
+
+            dbHelper.execSQL("DELETE FROM SQLITE_SEQUENCE WHERE NAME = '" + ROUTINES_TABLE + "'");
+            dbHelper.execSQL("DELETE FROM SQLITE_SEQUENCE WHERE NAME = '" + POSITIONS_TABLE + "'");
+            dbHelper.execSQL("DELETE FROM SQLITE_SEQUENCE WHERE NAME = '" + STATS_TABLE + "'");
+
+
+        } catch (SQLException e) {
+
+            Log.e(TAG, "SQl error", e);
+            Toast.makeText(context, e.toString(), Toast.LENGTH_SHORT).show();
+        }
     }
 
 }

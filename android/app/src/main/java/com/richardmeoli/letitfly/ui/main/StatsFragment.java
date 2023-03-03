@@ -7,9 +7,7 @@ import android.view.LayoutInflater;
 import androidx.fragment.app.Fragment;
 
 import com.richardmeoli.letitfly.R;
-import com.richardmeoli.letitfly.logic.users.authentication.AuthenticationError;
 import com.richardmeoli.letitfly.logic.users.authentication.Authenticator;
-import com.richardmeoli.letitfly.logic.users.authentication.callbacks.AuthOnActionCallback;
 
 public class StatsFragment extends Fragment {
 
@@ -18,18 +16,9 @@ public class StatsFragment extends Fragment {
         super.onResume();
 
         Authenticator auth = Authenticator.getInstance();
-
-        auth.isAccountVerified(new AuthOnActionCallback() {
-            @Override
-            public void onSuccess() {
-                // do nothing
-            }
-
-            @Override
-            public void onFailure(AuthenticationError error) {
-                auth.redirectToLoginActivity(requireContext());
-            }
-        });
+        if (auth.getCurrentUser() == null){
+            auth.redirectToLoginActivity(requireContext());
+        }
 
     }
 

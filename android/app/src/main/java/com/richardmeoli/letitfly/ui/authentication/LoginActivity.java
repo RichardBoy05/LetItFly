@@ -14,13 +14,11 @@ import com.richardmeoli.letitfly.R;
 import com.richardmeoli.letitfly.logic.database.local.sqlite.Database;
 import com.richardmeoli.letitfly.logic.users.authentication.Authenticator;
 import com.richardmeoli.letitfly.logic.users.authentication.AuthenticationError;
-import com.richardmeoli.letitfly.logic.users.authentication.callbacks.AuthOnActionCallback;
+import com.richardmeoli.letitfly.logic.users.authentication.callbacks.AuthOnEventCallback;
 import com.richardmeoli.letitfly.logic.users.backup.BackupError;
 import com.richardmeoli.letitfly.logic.users.backup.BackupManager;
-import com.richardmeoli.letitfly.logic.users.backup.callbacks.BackupOnActionCallback;
+import com.richardmeoli.letitfly.logic.users.backup.callbacks.BackupOnEventCallback;
 import com.richardmeoli.letitfly.ui.main.MainActivity;
-
-import java.io.File;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -38,6 +36,10 @@ public class LoginActivity extends AppCompatActivity {
         Button createNewAccountButton = findViewById(R.id.createNewAccountButton);
         ProgressDialog progressDialog = new ProgressDialog(this);
 
+        Authenticator auth = Authenticator.getInstance();
+        auth.signOutUser(); // make sure the previous user is signed out
+        Log.d(TAG, "User signed out!");
+
         loginButton.setOnClickListener(v -> {
 
             String emailOrUsername = emailOrUsernameField.getText().toString();
@@ -50,8 +52,6 @@ public class LoginActivity extends AppCompatActivity {
                 return;
             }
 
-
-            Authenticator auth = Authenticator.getInstance();
             auth.signOutUser(); // make sure the previous user is signed out
 
             progressDialog.setTitle("Accesso");
@@ -59,63 +59,77 @@ public class LoginActivity extends AppCompatActivity {
             progressDialog.setCanceledOnTouchOutside(false);
             progressDialog.show();
 
-            auth.signInUser(emailOrUsername, password, new AuthOnActionCallback() {
+            auth.signInUser(emailOrUsername, password, new AuthOnEventCallback() {
+
                 @Override
-                public void onSuccess() {
+                public void onSuccess() { // user successfully signed in
 
-                    BackupManager bm = BackupManager.getInstance();
-                    bm.donwloadDatabase(LoginActivity.this, new BackupOnActionCallback() {
-
+                    auth.isUserVerified(new AuthOnEventCallback() {
                         @Override
-                        public void onSuccess() {
+                        public void onSuccess() { // user successfully verified
 
-                            progressDialog.dismiss();
-                            Log.d(TAG, "User data retrieved successfully!");
-                            Toast.makeText(LoginActivity.this, "Logged in as " + auth.getCurrentUser().getDisplayName() + ", " + auth.getCurrentUser().getDisplayName(), Toast.LENGTH_SHORT).show();
-                            Intent myIntent = new Intent(LoginActivity.this, MainActivity.class);
-                            LoginActivity.this.startActivity(myIntent);
+                            BackupManager bm = BackupManager.getInstance();
+                            bm.donwloadDatabase(LoginActivity.this, new BackupOnEventCallback() {
+
+                                @Override
+                                public void onSuccess() { // user's database successfully downloaded
+
+                                    progressDialog.dismiss();
+
+                                    Log.d(TAG, "User data retrieved successfully!");
+                                    Toast.makeText(LoginActivity.this, "Logged in as " + auth.getCurrentUser().getDisplayName() + ", " + auth.getCurrentUser().getDisplayName(), Toast.LENGTH_SHORT).show();
+                                    Intent myIntent = new Intent(LoginActivity.this, MainActivity.class);
+                                    LoginActivity.this.startActivity(myIntent);
+
+                                }
+
+                                @Override
+                                public void onFailure(BackupError error) { // failed to download database
+
+                                    progressDialog.dismiss();
+
+                                    if (error == BackupError.NO_SUCH_FILE_IN_STORAGE_ERROR) {
+
+                                        Log.e(TAG, "User has no data to retrieve");
+                                        Database.getInstance(LoginActivity.this).wipeDatabase(LoginActivity.this);
+
+//                                        Toast.makeText(LoginActivity.this, "Logged in as " + auth.getCurrentUser().getDisplayName() + ", " + auth.getCurrentUser().getDisplayName(), Toast.LENGTH_SHORT).show();
+                                        Intent myIntent = new Intent(LoginActivity.this, MainActivity.class);
+                                        LoginActivity.this.startActivity(myIntent);
+                                        return;
+
+                                    }
+
+                                    Log.e(TAG, error.toString());
+                                    Toast.makeText(LoginActivity.this, "Impossibile recuperare i dati dell'utente", Toast.LENGTH_SHORT).show();
+                                    auth.signOutUser();
+
+                                }
+
+                            });
 
                         }
 
                         @Override
-                        public void onFailure(BackupError error) {
+                        public void onFailure(AuthenticationError error) { // user not verified or erification failed
 
                             progressDialog.dismiss();
-
-                            if (error == BackupError.NO_SUCH_FILE_IN_STORAGE_ERROR) {
-
-                                Log.d(TAG, "User has no data to retrieve");
-
-
-
-                                Toast.makeText(LoginActivity.this, "Logged in as " + auth.getCurrentUser().getDisplayName() + ", " + auth.getCurrentUser().getDisplayName(), Toast.LENGTH_SHORT).show();
-                                Intent myIntent = new Intent(LoginActivity.this, MainActivity.class);
-                                LoginActivity.this.startActivity(myIntent);
-                                return;
-
-                            }
-
-                            if (error == BackupError.NO_USER_LOGGED_IN_ERROR || error == BackupError.USER_NOT_VERIFIED_ERROR){
-                                Log.w(TAG, error.toString());
-                                Toast.makeText(LoginActivity.this, error.toString(), Toast.LENGTH_SHORT).show();
-                                return;
-                            }
-
+                            Log.e(TAG, "User not verified or verification failed!");
                             Log.e(TAG, error.toString());
-                            Toast.makeText(LoginActivity.this, "Impossibile recuperare i dati dell'utente", Toast.LENGTH_SHORT).show();
-                            auth.signOutUser();
+                            Toast.makeText(LoginActivity.this, error.toString(), Toast.LENGTH_SHORT).show();
 
                         }
-
                     });
-
 
                 }
 
                 @Override
-                public void onFailure(AuthenticationError error) {
-                    Toast.makeText(LoginActivity.this, error.toString(), Toast.LENGTH_SHORT).show();
+                public void onFailure(AuthenticationError error) { // user authentication failed
+
                     progressDialog.dismiss();
+                    Log.e(TAG, "User authentication failed!");
+                    Log.e(TAG, error.toString());
+                    Toast.makeText(LoginActivity.this, error.toString(), Toast.LENGTH_SHORT).show();
 
                 }
             });
@@ -131,9 +145,7 @@ public class LoginActivity extends AppCompatActivity {
                 return;
             }
 
-            Authenticator auth = Authenticator.getInstance();
-
-            auth.resetPassword(emailOrUsername, new AuthOnActionCallback() {
+            auth.resetPassword(emailOrUsername, new AuthOnEventCallback() {
                 @Override
                 public void onSuccess() {
                     Toast.makeText(LoginActivity.this, "Email successfully sent!", Toast.LENGTH_SHORT).show();

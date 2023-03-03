@@ -1,16 +1,15 @@
 package com.richardmeoli.letitfly.ui.main;
 
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
 import androidx.appcompat.app.AppCompatActivity;
-import com.google.android.material.bottomnavigation.BottomNavigationView;
-import com.google.firebase.firestore.FirebaseFirestore;
+
 import com.richardmeoli.letitfly.R;
 import com.richardmeoli.letitfly.logic.database.local.sqlite.Database;
-import com.richardmeoli.letitfly.logic.users.authentication.AuthenticationError;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.richardmeoli.letitfly.logic.users.authentication.Authenticator;
-import com.richardmeoli.letitfly.logic.users.authentication.callbacks.AuthOnActionCallback;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -31,7 +30,6 @@ public class MainActivity extends AppCompatActivity {
         // databases initialization (maybe to remove)
 
         Database.getInstance(this);
-        FirebaseFirestore.getInstance();
 
         // basic configuration
 
@@ -67,25 +65,21 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+
+        SQLiteDatabase db = Database.getInstance(this).getDbHelper();
+        if (db != null) {
+            db.close();
+        }
     }
 
     @Override
-    public void onResume(){
+    public void onResume() {
         super.onResume();
 
         Authenticator auth = Authenticator.getInstance();
-
-        auth.isAccountVerified(new AuthOnActionCallback() {
-            @Override
-            public void onSuccess() {
-                // do nothing
-            }
-
-            @Override
-            public void onFailure(AuthenticationError error) {
-                auth.redirectToLoginActivity(MainActivity.this);
-            }
-        });
+        if (auth.getCurrentUser() == null){
+            auth.redirectToLoginActivity(this);
+        }
 
     }
 

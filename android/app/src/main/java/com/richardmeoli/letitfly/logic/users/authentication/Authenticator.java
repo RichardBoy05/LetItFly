@@ -15,9 +15,9 @@ import com.richardmeoli.letitfly.ui.authentication.LoginActivity;
 import com.richardmeoli.letitfly.logic.database.online.firestore.Firestore;
 import com.richardmeoli.letitfly.logic.database.online.firestore.FirestoreError;
 import com.richardmeoli.letitfly.logic.database.online.firestore.FirestoreAttributes;
-import com.richardmeoli.letitfly.logic.users.authentication.callbacks.AuthOnActionCallback;
+import com.richardmeoli.letitfly.logic.users.authentication.callbacks.AuthOnEventCallback;
 import com.richardmeoli.letitfly.logic.users.authentication.callbacks.AuthUserExistsCallback;
-import com.richardmeoli.letitfly.logic.users.authentication.callbacks.AuthRetrieveEmailCallback;
+import com.richardmeoli.letitfly.logic.users.authentication.callbacks.AuthGetEmailCallback;
 import com.richardmeoli.letitfly.logic.database.online.callbacks.FirestoreOnTransactionCallback;
 import com.richardmeoli.letitfly.logic.database.online.callbacks.FirestoreOnSingleQueryCallback;
 
@@ -41,7 +41,7 @@ public class Authenticator implements FirestoreAttributes {
         return instance;
     }
 
-    //--------------- Authentication public methods ---------------//
+    //--------------- Authenticator public methods ---------------//
 
     public void checkUsernameUnique(String username, final AuthUserExistsCallback callback) {
         // Checks if a user exists based on their username.
@@ -75,7 +75,7 @@ public class Authenticator implements FirestoreAttributes {
 
     }
 
-    public void registerUser(String username, String email, String password, final AuthOnActionCallback callback) {
+    public void registerUser(String username, String email, String password, final AuthOnEventCallback callback) {
         // Registers a new account based on an email and password, assigns a unique username
         // to the account, and stores a user object into the Firestore database.
 
@@ -152,7 +152,7 @@ public class Authenticator implements FirestoreAttributes {
 
     }
 
-    public void sendVerificationEmail(final AuthOnActionCallback callback) {
+    public void sendVerificationEmail(final AuthOnEventCallback callback) {
         // Sends an email to the user to verify their email address.
 
         getCurrentUser().sendEmailVerification()
@@ -169,13 +169,13 @@ public class Authenticator implements FirestoreAttributes {
     }
 
 
-    public void signInUser(String emailOrUsername, String password, final AuthOnActionCallback callback) {
+    public void signInUser(String emailOrUsername, String password, final AuthOnEventCallback callback) {
         // Signs in the user based on their email or username and their password.
 
         if (android.util.Patterns.EMAIL_ADDRESS.matcher(emailOrUsername).matches()) {
             // handles the case where the entered field assumes an email pattern
 
-            signInUserByEmail(emailOrUsername, password, new AuthOnActionCallback() {
+            signInUserByEmail(emailOrUsername, password, new AuthOnEventCallback() {
                 @Override
                 public void onSuccess() {
                     callback.onSuccess();
@@ -190,10 +190,10 @@ public class Authenticator implements FirestoreAttributes {
         } else {
             // handles the case where the entered field does not assume an email pattern, indicating a username
 
-            retriveEmailFromUsername(emailOrUsername, new AuthRetrieveEmailCallback() {
+            retriveEmailFromUsername(emailOrUsername, new AuthGetEmailCallback() {
                 @Override
                 public void onSuccess(String email) {
-                    signInUserByEmail(email, password, new AuthOnActionCallback() {
+                    signInUserByEmail(email, password, new AuthOnEventCallback() {
                         @Override
                         public void onSuccess() {
                             callback.onSuccess();
@@ -225,7 +225,7 @@ public class Authenticator implements FirestoreAttributes {
 
     }
 
-    public void isAccountVerified(final AuthOnActionCallback callback) {
+    public void isUserVerified(final AuthOnEventCallback callback) {
         // Checks if the current user's account has been verified.
 
         if (getCurrentUser() == null){
@@ -233,7 +233,7 @@ public class Authenticator implements FirestoreAttributes {
             return;
         }
 
-        reload(new AuthOnActionCallback() {
+        reload(new AuthOnEventCallback() {
             @Override
             public void onSuccess() {
 
@@ -243,8 +243,8 @@ public class Authenticator implements FirestoreAttributes {
                     callback.onSuccess();
 
                 } else {
-                    Log.w(TAG, AuthenticationError.ACCOUNT_NOT_VERIFIED_ERROR.toString());
-                    callback.onFailure(AuthenticationError.ACCOUNT_NOT_VERIFIED_ERROR);
+                    Log.w(TAG, AuthenticationError.USER_NOT_VERIFIED_ERROR.toString());
+                    callback.onFailure(AuthenticationError.USER_NOT_VERIFIED_ERROR);
                 }
 
             }
@@ -257,13 +257,13 @@ public class Authenticator implements FirestoreAttributes {
         });
     }
 
-    public void resetPassword(String emailOrUsername, final AuthOnActionCallback callback) {
+    public void resetPassword(String emailOrUsername, final AuthOnEventCallback callback) {
         // Sends a password reset email to the user associated with the specified email or username.
 
         if (android.util.Patterns.EMAIL_ADDRESS.matcher(emailOrUsername).matches()) {
             // handles the case where the entered field assumes an email pattern
 
-            performPasswordReset(emailOrUsername, new AuthOnActionCallback() {
+            performPasswordReset(emailOrUsername, new AuthOnEventCallback() {
                 @Override
                 public void onSuccess() {
                     callback.onSuccess();
@@ -278,11 +278,11 @@ public class Authenticator implements FirestoreAttributes {
         } else {
             // handles the case where the entered field does not assume an email pattern, indicating a username
 
-            retriveEmailFromUsername(emailOrUsername, new AuthRetrieveEmailCallback() {
+            retriveEmailFromUsername(emailOrUsername, new AuthGetEmailCallback() {
                 @Override
                 public void onSuccess(String email) {
 
-                    performPasswordReset(email, new AuthOnActionCallback() {
+                    performPasswordReset(email, new AuthOnEventCallback() {
                         @Override
                         public void onSuccess() {
                             callback.onSuccess();
@@ -314,7 +314,7 @@ public class Authenticator implements FirestoreAttributes {
     }
 
 
-    public void reload(final AuthOnActionCallback callback) {
+    public void reload(final AuthOnEventCallback callback) {
         // Reloads the current user's profile data from the Firebase server.
 
         getCurrentUser().reload()
@@ -343,9 +343,9 @@ public class Authenticator implements FirestoreAttributes {
     }
 
 
-    //--------------- Authentication private methods ---------------//
+    //--------------- Authenticator private methods ---------------//
 
-    private void retriveEmailFromUsername(String username, final AuthRetrieveEmailCallback callback) {
+    private void retriveEmailFromUsername(String username, final AuthGetEmailCallback callback) {
         // Retrieves the email associated with the specified username from the Firestore database.
 
         Firestore fs = Firestore.getInstance();
@@ -387,7 +387,7 @@ public class Authenticator implements FirestoreAttributes {
 
     }
 
-    private void signInUserByEmail(String email, String password, final AuthOnActionCallback callback) {
+    private void signInUserByEmail(String email, String password, final AuthOnEventCallback callback) {
         // Utility method for signing in a user with an email and password combination.
         // This method is private because the class already has a public method (signInUser)
         // that handles both email and username-based sign-in operations.
@@ -430,7 +430,7 @@ public class Authenticator implements FirestoreAttributes {
 
     }
 
-    private void performPasswordReset(String email, final AuthOnActionCallback callback) {
+    private void performPasswordReset(String email, final AuthOnEventCallback callback) {
         // Utility method for resetting the password for an email account.
         // This method is private because the class already has a public method (resetPassword)
         // that handles both email and username-based password reset operations.

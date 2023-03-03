@@ -1,13 +1,11 @@
 package com.richardmeoli.letitfly.logic.entities;
 
 import android.content.Context;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.Arrays;
 import java.util.ArrayList;
 
 import com.richardmeoli.letitfly.logic.database.local.sqlite.Database;
@@ -18,9 +16,6 @@ import com.richardmeoli.letitfly.logic.database.online.firestore.Firestore;
 import com.richardmeoli.letitfly.logic.database.online.firestore.FirestoreAttributes;
 import com.richardmeoli.letitfly.logic.database.online.firestore.FirestoreError;
 import com.richardmeoli.letitfly.logic.database.online.callbacks.FirestoreOnTransactionCallback;
-import com.richardmeoli.letitfly.logic.users.backup.BackupError;
-import com.richardmeoli.letitfly.logic.users.backup.BackupManager;
-import com.richardmeoli.letitfly.logic.users.backup.callbacks.BackupOnActionCallback;
 
 public class Routine implements RoutinesTable, PositionsTable, FirestoreAttributes { // abstraction of the concept of Routine
 
@@ -130,7 +125,7 @@ public class Routine implements RoutinesTable, PositionsTable, FirestoreAttribut
         Database db = Database.getInstance(context);
         Object[] values = {name, author, color, uuid.toString(), time, isPublic, notes};
 
-        if (!db.insertRecord(ROUTINES_TABLE, values)) {
+        if (!db.insertRecord(ROUTINES_TABLE, values, context)) {
             callback.onFailure(FirestoreError.LOCAL_DB_ERROR);
             return;
         }
@@ -138,26 +133,14 @@ public class Routine implements RoutinesTable, PositionsTable, FirestoreAttribut
         for (Position pos : positions) {
 
             boolean result = db.insertRecord(POSITIONS_TABLE, new Object[]{name, pos.getXPos(), pos.getYPos(),
-                    pos.getImgWidth(), pos.getImgHeight(), pos.getShotsCount(), pos.getPointsPerShot(), pos.getPointsPerLastShot(), pos.getNotes()});
+                    pos.getImgWidth(), pos.getImgHeight(), pos.getShotsCount(), pos.getPointsPerShot(), pos.getPointsPerLastShot(), pos.getNotes()}, context);
 
             if (!result) {
-                db.deleteRecords(ROUTINES_TABLE, R_COLUMN_NAME, name);
+                db.deleteRecords(ROUTINES_TABLE, R_COLUMN_NAME, name, context);
                 callback.onFailure(FirestoreError.LOCAL_DB_ERROR);
                 return;
             }
         }
-
-        performBackup(context, new BackupOnActionCallback() { // backup changes
-            @Override
-            public void onSuccess() {
-                // do nothing
-            }
-
-            @Override
-            public void onFailure(BackupError error) {
-                callback.onFailure(FirestoreError.BACKUP_ERROR);
-            }
-        });
 
         if (!isPublic) {
             callback.onSuccess();
@@ -178,25 +161,6 @@ public class Routine implements RoutinesTable, PositionsTable, FirestoreAttribut
 
         });
 
-
-    }
-
-    private void performBackup(Context context, final BackupOnActionCallback callback){
-
-        BackupManager bm = BackupManager.getInstance();
-        bm.backupDatabase(context, new BackupOnActionCallback() {
-            @Override
-            public void onSuccess() {
-                Log.d(TAG, "Database successfully backed up!");
-                callback.onSuccess();
-            }
-
-            @Override
-            public void onFailure(BackupError error) {
-                Log.e(TAG, "Impossible to backup database!");
-                callback.onFailure(error);
-            }
-        });
 
     }
 

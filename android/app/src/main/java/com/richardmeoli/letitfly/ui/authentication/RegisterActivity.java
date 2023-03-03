@@ -5,19 +5,23 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
 import com.richardmeoli.letitfly.R;
+import com.richardmeoli.letitfly.logic.database.local.sqlite.Database;
+import com.richardmeoli.letitfly.logic.database.local.sqlite.DatabaseAttributes;
 import com.richardmeoli.letitfly.logic.database.local.tables.RoutinesTable;
 import com.richardmeoli.letitfly.logic.users.authentication.AuthenticationError;
 import com.richardmeoli.letitfly.logic.users.authentication.Authenticator;
-import com.richardmeoli.letitfly.logic.users.authentication.callbacks.AuthOnActionCallback;
+import com.richardmeoli.letitfly.logic.users.authentication.callbacks.AuthOnEventCallback;
 import com.richardmeoli.letitfly.ui.main.MainActivity;
 
-public class RegisterActivity extends AppCompatActivity implements RoutinesTable {
+public class RegisterActivity extends AppCompatActivity implements DatabaseAttributes, RoutinesTable {
+
+    private static final String TAG = "RegisterActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,6 +37,8 @@ public class RegisterActivity extends AppCompatActivity implements RoutinesTable
         Button resedVerificationEmail = findViewById(R.id.resendVerificationEmailButton);
         Button goButton = findViewById(R.id.registerGoButton);
         ProgressDialog progressDialog = new ProgressDialog(this);
+
+        Authenticator auth = Authenticator.getInstance();
 
         registerButton.setOnClickListener(v -> {
 
@@ -74,9 +80,6 @@ public class RegisterActivity extends AppCompatActivity implements RoutinesTable
 
             // registration
 
-            Authenticator auth = Authenticator.getInstance();
-            auth.signOutUser(); // make sure the previous user is signed out
-
             auth.checkUsernameUnique(username, exists -> {
 
                 if (exists) {
@@ -89,13 +92,13 @@ public class RegisterActivity extends AppCompatActivity implements RoutinesTable
                 progressDialog.setCanceledOnTouchOutside(false);
                 progressDialog.show();
 
-                auth.registerUser(username, email, password, new AuthOnActionCallback() {
+                auth.registerUser(username, email, password, new AuthOnEventCallback() {
                     @Override
                     public void onSuccess() {
 
                         progressDialog.dismiss();
 
-                        auth.sendVerificationEmail(new AuthOnActionCallback() {
+                        auth.sendVerificationEmail(new AuthOnEventCallback() {
                             @Override
                             public void onSuccess() {
                                 Toast.makeText(RegisterActivity.this, "Account creato con successo! Ti abbiamo inviato una email di verifica. Segui le istruzioni per completare la registrazione!", Toast.LENGTH_SHORT).show();
@@ -127,31 +130,32 @@ public class RegisterActivity extends AppCompatActivity implements RoutinesTable
 
         resedVerificationEmail.setOnClickListener(v -> {
 
-            Toast.makeText(this, "Does nothing for now, still to decide how to implment it", Toast.LENGTH_SHORT).show();
+            if (auth.getCurrentUser() == null){
+                Toast.makeText(this, "No user logged in!", Toast.LENGTH_SHORT).show();
+                return;
+            }
 
-//            Authenticator auth = Authenticator.getInstance();
-//            auth.sendVerificationEmail(new AuthOnActionCallback() {
-//                @Override
-//                public void onSuccess() {
-//                    Toast.makeText(RegisterActivity.this, "Email inviata!", Toast.LENGTH_SHORT).show();
-//                }
-//
-//                @Override
-//                public void onFailure(AuthenticationError error) {
-//
-//                }
-//            });
+            auth.sendVerificationEmail(new AuthOnEventCallback() {
+                @Override
+                public void onSuccess() {
+                    Toast.makeText(RegisterActivity.this, "Email reinviata!", Toast.LENGTH_SHORT).show();
+                }
+
+                @Override
+                public void onFailure(AuthenticationError error) {
+
+                }
+            });
 
         });
 
         goButton.setOnClickListener(v -> {
 
-            Authenticator auth = Authenticator.getInstance();
-
-            auth.isAccountVerified(new AuthOnActionCallback() {
+            auth.isUserVerified(new AuthOnEventCallback() {
                 @Override
                 public void onSuccess() {
 
+                    Database.getInstance(RegisterActivity.this).wipeDatabase(RegisterActivity.this);
                     Toast.makeText(RegisterActivity.this, "Logged in as " + auth.getCurrentUser().getDisplayName() + ", " + auth.getCurrentUser().getDisplayName(), Toast.LENGTH_SHORT).show();
                     Intent myIntent = new Intent(RegisterActivity.this, MainActivity.class);
                     RegisterActivity.this.startActivity(myIntent);
@@ -175,5 +179,14 @@ public class RegisterActivity extends AppCompatActivity implements RoutinesTable
         });
 
 
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        Authenticator auth = Authenticator.getInstance();
+        auth.signOutUser(); // make sure the previous user is signed out
+        Log.d(TAG, "User signed out!");
     }
 }

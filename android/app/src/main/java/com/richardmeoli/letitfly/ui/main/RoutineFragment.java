@@ -1,8 +1,6 @@
 package com.richardmeoli.letitfly.ui.main;
 
-import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,18 +16,13 @@ import com.richardmeoli.letitfly.logic.database.local.sqlite.Database;
 import com.richardmeoli.letitfly.logic.database.local.sqlite.DatabaseAttributes;
 import com.richardmeoli.letitfly.logic.database.local.sqlite.InvalidInputException;
 import com.richardmeoli.letitfly.logic.database.online.callbacks.FirestoreOnTransactionCallback;
-import com.richardmeoli.letitfly.logic.database.online.firestore.Firestore;
 import com.richardmeoli.letitfly.logic.database.online.firestore.FirestoreAttributes;
 import com.richardmeoli.letitfly.logic.database.online.firestore.FirestoreError;
 import com.richardmeoli.letitfly.logic.entities.Position;
 import com.richardmeoli.letitfly.logic.entities.Routine;
 import com.richardmeoli.letitfly.logic.users.authentication.AuthenticationError;
 import com.richardmeoli.letitfly.logic.users.authentication.Authenticator;
-import com.richardmeoli.letitfly.logic.users.authentication.callbacks.AuthOnActionCallback;
-import com.richardmeoli.letitfly.logic.users.backup.BackupError;
-import com.richardmeoli.letitfly.logic.users.backup.BackupManager;
-import com.richardmeoli.letitfly.logic.users.backup.callbacks.BackupOnActionCallback;
-import com.richardmeoli.letitfly.ui.authentication.LoginActivity;
+import com.richardmeoli.letitfly.logic.users.authentication.callbacks.AuthOnEventCallback;
 import com.richardmeoli.letitfly.ui.authentication.RegisterActivity;
 
 import java.util.ArrayList;
@@ -50,18 +43,9 @@ public class RoutineFragment extends Fragment implements DatabaseAttributes, Fir
         super.onResume();
 
         Authenticator auth = Authenticator.getInstance();
-
-        auth.isAccountVerified(new AuthOnActionCallback() {
-            @Override
-            public void onSuccess() {
-                // do nothing
-            }
-
-            @Override
-            public void onFailure(AuthenticationError error) {
-                auth.redirectToLoginActivity(requireContext());
-            }
-        });
+        if (auth.getCurrentUser() == null){
+            auth.redirectToLoginActivity(requireContext());
+        }
 
     }
 
@@ -85,8 +69,8 @@ public class RoutineFragment extends Fragment implements DatabaseAttributes, Fir
 
 
         delete.setOnClickListener(v -> {
-            Toast.makeText(getActivity(), "deleted db", Toast.LENGTH_SHORT).show();
-            requireActivity().deleteDatabase(DATABASE_NAME);
+            Database.getInstance(requireContext()).wipeDatabase(requireContext());
+            Toast.makeText(getActivity(), "wiped out db", Toast.LENGTH_SHORT).show();
 
         });
 
@@ -148,20 +132,9 @@ public class RoutineFragment extends Fragment implements DatabaseAttributes, Fir
 
         download.setOnClickListener(v -> {
 
-            BackupManager bm = BackupManager.getInstance();
+            Authenticator a = Authenticator.getInstance();
+            a.signOutUser();
 
-            bm.donwloadDatabase(requireContext(), new BackupOnActionCallback() {
-                @Override
-                public void onSuccess() {
-                    Toast.makeText(requireContext(), "Success", Toast.LENGTH_SHORT).show();
-                }
-
-                @Override
-                public void onFailure(BackupError error) {
-                    Toast.makeText(requireContext(), error.toString(), Toast.LENGTH_SHORT).show();
-
-                }
-            });
         });
 
 
