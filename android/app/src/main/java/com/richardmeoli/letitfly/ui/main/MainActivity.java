@@ -6,9 +6,12 @@ import android.os.Bundle;
 import androidx.fragment.app.Fragment;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreSettings;
 import com.richardmeoli.letitfly.R;
 import com.richardmeoli.letitfly.logic.database.local.sqlite.Database;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.richardmeoli.letitfly.logic.database.online.firestore.Firestore;
 import com.richardmeoli.letitfly.logic.users.authentication.Authenticator;
 
 public class MainActivity extends AppCompatActivity {
@@ -30,6 +33,8 @@ public class MainActivity extends AppCompatActivity {
         // databases initialization (maybe to remove)
 
         Database.getInstance(this);
+
+        Firestore.getInstance().waitForPendingWrites();
 
         // basic configuration
 

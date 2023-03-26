@@ -1,6 +1,7 @@
 package com.richardmeoli.letitfly.logic.entities;
 
 import android.content.Context;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 
@@ -156,6 +157,7 @@ public class Routine implements RoutinesTable, PositionsTable, FirestoreAttribut
             @Override
             public void onFailure(FirestoreError error) {
                 callback.onFailure(error);
+                Log.e(TAG, error.toString());
 
             }
 

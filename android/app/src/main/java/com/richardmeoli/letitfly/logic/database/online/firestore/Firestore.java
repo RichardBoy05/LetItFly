@@ -1,6 +1,7 @@
 package com.richardmeoli.letitfly.logic.database.online.firestore;
 
 import android.util.Log;
+
 import androidx.annotation.NonNull;
 
 import com.google.firebase.firestore.Query;
@@ -66,7 +67,6 @@ public class Firestore implements FirestoreContract {
             return;
         }
 
-
         checkIfDocumentExists(collection, id, exists -> {
 
             if (exists) { // checks if document already exists
@@ -91,7 +91,7 @@ public class Firestore implements FirestoreContract {
                             callback.onSuccess();
                         })
                         .addOnFailureListener(e -> {
-                            Log.w(TAG, FirestoreError.ERROR_WRITING_DOCUMENT.toString(), e);
+                            Log.e(TAG, FirestoreError.ERROR_WRITING_DOCUMENT.toString(), e);
                             callback.onFailure(FirestoreError.ERROR_WRITING_DOCUMENT);
                         });
 
@@ -104,10 +104,12 @@ public class Firestore implements FirestoreContract {
                             callback.onSuccess();
                         })
                         .addOnFailureListener(e -> {
-                            Log.w(TAG, FirestoreError.ERROR_WRITING_DOCUMENT.toString(), e);
+                            Log.e(TAG, FirestoreError.ERROR_WRITING_DOCUMENT.toString(), e);
                             callback.onFailure(FirestoreError.ERROR_WRITING_DOCUMENT);
                         });
+
             }
+
         });
 
     }
@@ -130,7 +132,7 @@ public class Firestore implements FirestoreContract {
                         callback.onSuccess();
                     })
                     .addOnFailureListener(e -> {
-                        Log.w(TAG, "Error deleting document", e);
+                        Log.e(TAG, "Error deleting document", e);
                         callback.onFailure(FirestoreError.ERROR_DELETING_DOCUMENT);
                     });
         });
@@ -175,7 +177,7 @@ public class Firestore implements FirestoreContract {
                         callback.onSuccess();
                     })
                     .addOnFailureListener(e -> {
-                        Log.w(TAG, FirestoreError.ERROR_UPDATING_DOCUMENT.toString(), e);
+                        Log.e(TAG, FirestoreError.ERROR_UPDATING_DOCUMENT.toString(), e);
                         callback.onFailure(FirestoreError.ERROR_UPDATING_DOCUMENT);
                     });
         });
@@ -237,7 +239,7 @@ public class Firestore implements FirestoreContract {
 
 
                     } else {
-                        Log.w(TAG, FirestoreError.ERROR_GETTING_DOCUMENT.toString(), task.getException());
+                        Log.e(TAG, FirestoreError.ERROR_GETTING_DOCUMENT.toString(), task.getException());
                         callback.onFailure(FirestoreError.ERROR_GETTING_DOCUMENT);
                     }
                 });
@@ -301,7 +303,7 @@ public class Firestore implements FirestoreContract {
 
                     } else {
 
-                        Log.w(TAG, FirestoreError.ERROR_GETTING_DOCUMENTS.toString(), task.getException());
+                        Log.e(TAG, FirestoreError.ERROR_GETTING_DOCUMENTS.toString(), task.getException());
                         callback.onFailure(FirestoreError.ERROR_GETTING_DOCUMENTS);
                     }
                 });
@@ -313,21 +315,31 @@ public class Firestore implements FirestoreContract {
     public void checkIfDocumentExists(@NonNull String collection, String id, FirestoreDocumentExistsCallback callback) {
         // Determine if a document with the given 'id' exists in the specified 'collection' in Firestore.
 
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        if (!collection.equals(USERS_COLLECTION)) {
+            // Note: The only collection that must be checked for id uniqueness is
+            // 'users'. Other collections use UUIDs, which makes them already unique.
+            callback.onDocumentExists(false);
+            return;
+        }
 
         if (id == null) { // if 'id' is null, Firestore will automatically generate a unique identifier for it.
             callback.onDocumentExists(false);
             return;
         }
 
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
         db.collection(collection).document(id)
                 .get()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        DocumentSnapshot document = task.getResult();
+                .addOnSuccessListener(documentSnapshot -> {
+                    Log.d(TAG, "Found document '" + documentSnapshot.getId() + "'");
+                    callback.onDocumentExists(documentSnapshot.exists());
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, FirestoreError.NETWORK_ERROR.toString(), e);
+                    callback.onDocumentExists(true);
 
-                        callback.onDocumentExists(document.exists());
-                    }
+
                 });
 
     }
@@ -338,7 +350,7 @@ public class Firestore implements FirestoreContract {
         switch (collection) {
 
             case ROUTINES_COLLECTION:
-                if (fields == null){ // null refers to all the fields
+                if (fields == null) { // null refers to all the fields
                     return false;
                 }
 
@@ -350,7 +362,7 @@ public class Firestore implements FirestoreContract {
                 return false;
 
             case POSITIONS_COLLECTION:
-                if (fields == null){ // null refers to all the fields
+                if (fields == null) { // null refers to all the fields
                     return false;
                 }
 
@@ -362,7 +374,7 @@ public class Firestore implements FirestoreContract {
                 return false;
 
             case USERS_COLLECTION:
-                if (fields == null){ // null refers to all the fields
+                if (fields == null) { // null refers to all the fields
                     return false;
                 }
 
@@ -377,6 +389,16 @@ public class Firestore implements FirestoreContract {
                 return true;
         }
 
+    }
+
+    public void waitForPendingWrites() {
+        // Waits for all pending writes to be uploaded to Firestore and logs a message when there are no more pending writes.
+
+        FirebaseFirestore.getInstance().waitForPendingWrites().addOnSuccessListener(aVoid -> {
+            Log.d(TAG, "All pending writes have been uploaded to Firestore.");
+        }).addOnFailureListener(e -> {
+            Log.e(TAG, "Error while waiting for pending writes to be uploaded to Firestore: " + e.getMessage());
+        });
     }
 
 }

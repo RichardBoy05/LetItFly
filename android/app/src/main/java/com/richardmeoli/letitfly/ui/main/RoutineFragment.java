@@ -11,19 +11,17 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.richardmeoli.letitfly.R;
-import com.richardmeoli.letitfly.logic.database.local.sqlite.Database;
 import com.richardmeoli.letitfly.logic.database.local.sqlite.DatabaseAttributes;
 import com.richardmeoli.letitfly.logic.database.local.sqlite.InvalidInputException;
 import com.richardmeoli.letitfly.logic.database.online.callbacks.FirestoreOnTransactionCallback;
+import com.richardmeoli.letitfly.logic.database.online.firestore.Firestore;
 import com.richardmeoli.letitfly.logic.database.online.firestore.FirestoreAttributes;
 import com.richardmeoli.letitfly.logic.database.online.firestore.FirestoreError;
 import com.richardmeoli.letitfly.logic.entities.Position;
 import com.richardmeoli.letitfly.logic.entities.Routine;
-import com.richardmeoli.letitfly.logic.users.authentication.AuthenticationError;
 import com.richardmeoli.letitfly.logic.users.authentication.Authenticator;
-import com.richardmeoli.letitfly.logic.users.authentication.callbacks.AuthOnEventCallback;
-import com.richardmeoli.letitfly.ui.authentication.RegisterActivity;
 
 import java.util.ArrayList;
 import java.util.Random;
@@ -99,7 +97,7 @@ public class RoutineFragment extends Fragment implements DatabaseAttributes, Fir
                 }
 
 
-                Routine routine = new Routine(sb.toString(), "opttibile", "#778899", UUID.randomUUID(), 10, false, null, positions);
+                Routine routine = new Routine(sb.toString(), "opttibile", "#778899", UUID.randomUUID(), 10, true, null, positions);
 
 
                 routine.save(requireContext(), new FirestoreOnTransactionCallback() {
@@ -132,9 +130,24 @@ public class RoutineFragment extends Fragment implements DatabaseAttributes, Fir
 
         download.setOnClickListener(v -> {
 
-            Authenticator a = Authenticator.getInstance();
-            a.signOutUser();
+            Firestore f = Firestore.getInstance();
 
+            FirebaseFirestore d = FirebaseFirestore.getInstance();
+
+            f.addDocument("routines", null, new String[]{"Boh", "sasa","Boh", "sasa","Boh"}, new FirestoreOnTransactionCallback() {
+                @Override
+                public void onSuccess() {
+                    Toast.makeText(requireContext(), "Suces", Toast.LENGTH_SHORT).show();
+
+                }
+
+                @Override
+                public void onFailure(FirestoreError error) {
+                    Toast.makeText(requireContext(), error.toString(), Toast.LENGTH_SHORT).show();
+
+                }
+            });
+//
         });
 
 

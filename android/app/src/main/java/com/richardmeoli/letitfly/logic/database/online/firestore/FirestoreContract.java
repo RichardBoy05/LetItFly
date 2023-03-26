@@ -21,5 +21,6 @@ public interface FirestoreContract extends FirestoreAttributes {
 
     boolean areFieldsInvalid(String collection, String[] fields);
     void checkIfDocumentExists(String collection, String id, final FirestoreDocumentExistsCallback callback);
+    void waitForPendingWrites();
 
 }

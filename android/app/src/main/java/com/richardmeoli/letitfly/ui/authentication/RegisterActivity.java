@@ -11,7 +11,6 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.richardmeoli.letitfly.R;
-import com.richardmeoli.letitfly.logic.database.local.sqlite.Database;
 import com.richardmeoli.letitfly.logic.database.local.sqlite.DatabaseAttributes;
 import com.richardmeoli.letitfly.logic.database.local.tables.RoutinesTable;
 import com.richardmeoli.letitfly.logic.users.authentication.AuthenticationError;
@@ -49,36 +48,41 @@ public class RegisterActivity extends AppCompatActivity implements DatabaseAttri
 
             // fields validation
 
-            if (username.equals("") || email.equals("") || password.equals("") || confirmPassword.equals("")){
+            if (username.equals("") || email.equals("") || password.equals("") || confirmPassword.equals("")) {
                 Toast.makeText(this, "Fill all the fields", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            if (username.length() < R_AUTHOR_MIN_LENGTH || username.length() > R_AUTHOR_MAX_LENGTH){
+            if (username.length() < R_AUTHOR_MIN_LENGTH || username.length() > R_AUTHOR_MAX_LENGTH) {
                 Toast.makeText(this, "Username length must be within " + R_AUTHOR_MIN_LENGTH + " and " + R_AUTHOR_MAX_LENGTH + " characters!", Toast.LENGTH_SHORT).show();
             }
 
-            if (!username.matches(R_AUTHOR_VALID_CHARACTERS)){
+            if (!username.matches(R_AUTHOR_VALID_CHARACTERS)) {
                 Toast.makeText(this, "Username contains invalid characters! Only letters, numbers and spaces are allowed!", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()){
+            if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
                 Toast.makeText(this, "This email address is not valid!", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            if (password.length() < 6){
+            if (password.length() < 6) {
                 Toast.makeText(this, "Password must be at least 6 characters long!", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            if (!password.equals(confirmPassword)){
+            if (!password.equals(confirmPassword)) {
                 Toast.makeText(this, "The two password do not match!", Toast.LENGTH_SHORT).show();
                 return;
             }
 
             // registration
+
+            if (!auth.isUserConnected(this)){
+                Toast.makeText(this, "Make sure to be connected to a network in order to register!", Toast.LENGTH_SHORT).show();
+                return;
+            }
 
             auth.checkUsernameUnique(username, exists -> {
 
@@ -112,7 +116,6 @@ public class RegisterActivity extends AppCompatActivity implements DatabaseAttri
                         });
 
 
-
                     }
 
                     @Override
@@ -130,7 +133,7 @@ public class RegisterActivity extends AppCompatActivity implements DatabaseAttri
 
         resedVerificationEmail.setOnClickListener(v -> {
 
-            if (auth.getCurrentUser() == null){
+            if (auth.getCurrentUser() == null) {
                 Toast.makeText(this, "No user logged in!", Toast.LENGTH_SHORT).show();
                 return;
             }
@@ -155,7 +158,6 @@ public class RegisterActivity extends AppCompatActivity implements DatabaseAttri
                 @Override
                 public void onSuccess() {
 
-                    Database.getInstance(RegisterActivity.this).wipeDatabase(RegisterActivity.this);
                     Toast.makeText(RegisterActivity.this, "Logged in as " + auth.getCurrentUser().getDisplayName() + ", " + auth.getCurrentUser().getDisplayName(), Toast.LENGTH_SHORT).show();
                     Intent myIntent = new Intent(RegisterActivity.this, MainActivity.class);
                     RegisterActivity.this.startActivity(myIntent);

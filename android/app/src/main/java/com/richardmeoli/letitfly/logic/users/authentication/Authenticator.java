@@ -1,8 +1,10 @@
 package com.richardmeoli.letitfly.logic.users.authentication;
 
-import android.content.Context;
-import android.content.Intent;
 import android.util.Log;
+import android.content.Intent;
+import android.content.Context;
+import android.net.NetworkInfo;
+import android.net.ConnectivityManager;
 
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.FirebaseAuth;
@@ -16,11 +18,10 @@ import com.richardmeoli.letitfly.logic.database.online.firestore.Firestore;
 import com.richardmeoli.letitfly.logic.database.online.firestore.FirestoreError;
 import com.richardmeoli.letitfly.logic.database.online.firestore.FirestoreAttributes;
 import com.richardmeoli.letitfly.logic.users.authentication.callbacks.AuthOnEventCallback;
-import com.richardmeoli.letitfly.logic.users.authentication.callbacks.AuthUserExistsCallback;
 import com.richardmeoli.letitfly.logic.users.authentication.callbacks.AuthGetEmailCallback;
+import com.richardmeoli.letitfly.logic.users.authentication.callbacks.AuthUserExistsCallback;
 import com.richardmeoli.letitfly.logic.database.online.callbacks.FirestoreOnTransactionCallback;
 import com.richardmeoli.letitfly.logic.database.online.callbacks.FirestoreOnSingleQueryCallback;
-
 
 import java.util.Map;
 
@@ -49,26 +50,27 @@ public class Authenticator implements FirestoreAttributes {
         Firestore fs = Firestore.getInstance();
 
         fs.selectDocumentById(USERS_COLLECTION, null, username, new FirestoreOnSingleQueryCallback() {
+
             @Override
             public void onSuccess(Map<String, Object> map) {
-                callback.onUserExists(map.size() != 0);
-                // passes false to the callback if the map is empty (size = 0), indicating that the user does not exist;
-                // otherwise, passes true to the callback, indicating that the user exists.
-
+                callback.onUserExists(true); // users exists
             }
 
             @Override
             public void onFailure(FirestoreError error) {
 
                 if (error == FirestoreError.NO_SUCH_DOCUMENT) {
-                    // the document doesn't exist, which means the user doesn't exist either.
+                    // the document doesn't exist, which means the user doesn't exist either
+
+                    Log.d(TAG, error.toString());
                     callback.onUserExists(false);
                     return;
                 }
 
+                Log.e(TAG, error.toString());
                 callback.onUserExists(true);
                 // an unexpected error occurred, so pass true to stop
-                // the code flow and avoid continuing with invalid data.
+                // the code flow and avoid continuing with invalid data
 
             }
         });
@@ -331,6 +333,15 @@ public class Authenticator implements FirestoreAttributes {
                         callback.onFailure(AuthenticationError.USER_RELOADING_ERROR);
                     }
                 });
+
+    }
+
+    public boolean isUserConnected(Context context) {
+        // Checks if the device is currently connected to the internet through any network
+
+        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
 
     }
 
